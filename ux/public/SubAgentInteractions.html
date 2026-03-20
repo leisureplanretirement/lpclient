@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sub-Agent Interaction Patterns</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222636;
+      --border: #2e3347;
+      --accent: #6c8ef7;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --orange: #fb923c;
+      --text: #e2e8f0;
+      --muted: #8892a4;
+      --code-bg: #131720;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      font-size: 1rem;
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--accent2);
+      margin: 2.5rem 0 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    p { margin-bottom: 0.85rem; color: var(--text); }
+
+    /* Task badge table */
+    .task-grid {
+      display: grid;
+      grid-template-columns: 80px 1fr 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .task-grid .th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .task-grid .td {
+      background: var(--surface);
+      padding: 0.75rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .task-grid .td:last-child, .task-grid .th:last-child { border-right: none; }
+    .task-grid > *:nth-last-child(-n+4) { border-bottom: none; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-z  { background: #1e2a1a; color: #86efac; border: 1px solid #166534; }
+    .badge-a  { background: #1a2340; color: #93c5fd; border: 1px solid #1d4ed8; }
+    .badge-b  { background: #2a1f1a; color: #fdba74; border: 1px solid #c2410c; }
+    .badge-c  { background: #271a33; color: #c4b5fd; border: 1px solid #7c3aed; }
+    .badge-d  { background: #1a2835; color: #67e8f9; border: 1px solid #0e7490; }
+    .badge-e  { background: #2a1a1a; color: #fca5a5; border: 1px solid #b91c1c; }
+
+    .when-pill {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .when-first { background: #1a2a1a; color: #86efac; }
+    .when-sub   { background: #2a1a2a; color: #d8b4fe; }
+    .when-both  { background: #1a2040; color: #93c5fd; }
+
+    /* Diagrams */
+    .diagram {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem 1.5rem;
+      margin: 1.25rem 0 1.75rem;
+      overflow-x: auto;
+    }
+
+    .diagram pre {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: var(--text);
+      white-space: pre;
+    }
+
+    /* Colour helpers for diagram text */
+    .cz  { color: #86efac; }
+    .ca  { color: #93c5fd; }
+    .cb  { color: #fdba74; }
+    .cc  { color: #c4b5fd; }
+    .cd  { color: #67e8f9; }
+    .ce  { color: #fca5a5; }
+    .cg  { color: var(--green); }
+    .cr  { color: var(--red); }
+    .cy  { color: var(--yellow); }
+    .cm  { color: var(--muted); }
+    .cw  { color: var(--text); }
+
+    /* Info boxes */
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      padding: 0.85rem 1.1rem;
+      border-radius: 0 6px 6px 0;
+      margin: 1rem 0;
+      font-size: 0.92rem;
+    }
+    .callout.note  { border-color: var(--accent); }
+    .callout.warn  { border-color: var(--yellow); }
+    .callout.green { border-color: var(--green); }
+
+    .callout strong { color: var(--accent2); }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.85em;
+      background: var(--code-bg);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      color: #f0abfc;
+    }
+
+    /* Step list */
+    .steps {
+      list-style: none;
+      margin: 1rem 0;
+    }
+    .steps li {
+      display: flex;
+      gap: 0.85rem;
+      margin-bottom: 0.75rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.15rem;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2rem 0;
+    }
+
+    /* Agent detail cards */
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .agent-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .agent-card-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .agent-card p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .agent-card p:last-child { margin-bottom: 0; }
+
+    .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Sub-Agent Interaction Patterns</h1>
+  <p class="subtitle">GreenAcres · Agent Project · MultiPart Orchestration</p>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>Task Definitions</h2>
+
+  <p>
+    Each task corresponds to a specialised sub-agent class. They share the same
+    <code>ISubAgent</code> interface but receive different system prompts and
+    different views of the shared <code>ModelContext</code>.
+  </p>
+
+  <div class="task-grid">
+    <div class="th">Task</div>
+    <div class="th">Sub-Agent Class</div>
+    <div class="th">When Used</div>
+    <div class="th">Purpose</div>
+
+    <div class="td"><span class="badge badge-z">Task Z</span></div>
+    <div class="td"><code>QuerySufficiencySubAgent</code></div>
+    <div class="td"><span class="when-pill when-first">First query only</span></div>
+    <div class="td">
+      <strong>Gatekeeper.</strong> Determines whether the user has provided
+      enough information (income, expenses, savings) to run a meaningful
+      simulation. Responds with <code>SUFFICIENT</code> or
+      <code>NOT SUFFICIENT</code> plus a description. If not sufficient, it
+      replies directly to the user and clears the model context so the next
+      attempt still counts as <em>first time</em>.
+    </div>
+
+    <div class="td"><span class="badge badge-a">Task A</span></div>
+    <div class="td"><code>ToolCallSubAgent</code></div>
+    <div class="td"><span class="when-pill when-both">Both paths</span></div>
+    <div class="td">
+      <strong>Unconditional tool caller.</strong> Forces an MCP
+      <code>RunSimulation</code> tool invocation regardless of context.
+      Uses the <em>ToolCallOnly</em> system prompt with old tool responses
+      elided. Does not analyse the result — returns only the raw
+      <code>[FunctionCall, FunctionResult, AssistantText]</code> messages for
+      the caller to append to context.
+    </div>
+
+    <div class="td"><span class="badge badge-b">Task B</span></div>
+    <div class="td"><code>AnalyzeToolResponseSubAgent</code></div>
+    <div class="td"><span class="when-pill when-sub">Subsequent queries only</span></div>
+    <div class="td">
+      <strong>Speculative analyser (prior result).</strong> Runs in parallel
+      with Tasks A and C. Analyses the <em>previous</em> simulation result
+      without waiting for a new tool call. Its output is used only if Task C
+      concludes no new tool call is needed.
+    </div>
+
+    <div class="td"><span class="badge badge-c">Task C</span></div>
+    <div class="td"><code>NeedToolResponseSubAgent</code></div>
+    <div class="td"><span class="when-pill when-sub">Subsequent queries only</span></div>
+    <div class="td">
+      <strong>Decision gate.</strong> Inspects prior context and the new user
+      query to decide whether a fresh simulation is required. Returns one of:
+      <code>call_tool</code>, <code>reuse</code>,
+      <code>answer_without_tool</code>, or
+      <code>ask_clarifying_question</code>. Receives a <em>compacted</em>
+      summary of prior tool responses (not the raw 400 KB payload) to keep its
+      prompt concise.
+    </div>
+
+    <div class="td"><span class="badge badge-d">Task D</span></div>
+    <div class="td"><code>AnalyzeToolResponseSubAgent</code></div>
+    <div class="td"><span class="when-pill when-both">Both paths</span></div>
+    <div class="td">
+      <strong>Fresh-result analyser.</strong> Launched after Task A completes.
+      Analyses the <em>current</em> simulation result and produces the
+      user-facing textual response. Uses the <em>AnalysisOnly</em> system
+      prompt; tool invocation is disabled. Output is delivered via a deferred
+      logger so only the winning task's text reaches the user.
+    </div>
+
+    <div class="td"><span class="badge badge-e">Task E</span></div>
+    <div class="td"><code>ToolCallValidationSubAgent</code></div>
+    <div class="td"><span class="when-pill when-first">First query only</span></div>
+    <div class="td">
+      <strong>Validator.</strong> After Task A runs, an independent LLM call
+      checks the generated tool-call JSON for date consistency, schema
+      compliance, and fidelity to the user's stated inputs. Returns
+      <code>TOOL REQUEST VALID</code> or <code>TOOL REQUEST INVALID</code>.
+      Triggers a corrective retry loop (up to 2 attempts) on failure.
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>Shared Infrastructure</h2>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span style="font-size:1.2rem">🗂</span>
+      <div class="agent-card-title">ModelContext</div>
+    </div>
+    <p>
+      The single shared conversation history. All sub-agents read a
+      <strong>read-only snapshot</strong> via <code>FetchCompactedContext()</code>,
+      which can inject a different system prompt and elide large tool payloads.
+      Only the orchestrator writes back to <code>ModelContext</code> (after
+      Task A completes). Calling <code>Clear()</code> resets to the initial
+      system prompt, used when Task Z says NOT SUFFICIENT.
+    </p>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span style="font-size:1.2rem">📋</span>
+      <div class="agent-card-title">DeferredDialogLogger</div>
+    </div>
+    <p>
+      Tasks B and D each hold their reply in a deferred buffer. Only once the
+      winning task is determined does that buffer flush to the real
+      <code>dialogLogger</code> — ensuring the user sees exactly one response.
+    </p>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span style="font-size:1.2rem">📅</span>
+      <div class="agent-card-title">DatePreprocessor (step 0)</div>
+    </div>
+    <p>
+      On the first query, before any task runs, a separate LLM call rewrites
+      the user's message to make all ages and dates explicit (e.g. "retire at
+      65" becomes "retire at 65 (2041-03-01)"). On subsequent queries the user
+      text is added directly to context.
+    </p>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>Pattern 1 — First Query</h2>
+
+  <p>
+    The first query triggers a validation-heavy flow. The goal is to ensure the
+    user's intent is clear <em>before</em> running the simulation, and to
+    verify the generated tool request is correct <em>after</em>.
+  </p>
+
+  <div class="diagram">
+    <pre>
+  User Query
+      │
+      ▼
+  ┌─────────────────────────┐
+  │  DatePreprocessor (LLM) │  Rewrites query with explicit calendar dates
+  └─────────────────────────┘
+      │
+      ▼ preprocessed query added to ModelContext
+      │
+      ├──────────────────────────────────────────────────┐
+      │ (parallel launch)                                │
+      ▼                                                  ▼
+  ┌───────────────────────┐                  ┌───────────────────────┐
+  │  <span class="cz">Task Z</span>               │                  │  <span class="ca">Task A</span>               │
+  │  QuerySufficiency     │                  │  ToolCallSubAgent     │
+  │  "Does user have      │                  │  Calls RunSimulation  │
+  │   enough info?"       │                  │  MCP tool             │
+  └───────────────────────┘                  └───────────────────────┘
+      │ await Z first                             │ (running…)
+      │
+      ├─── <span class="cr">NOT SUFFICIENT</span>
+      │       │
+      │       ▼
+      │   Log description to user
+      │   ModelContext.Clear()           ← next call is still "first time"
+      │   ← return (done)
+      │
+      └─── <span class="cg">SUFFICIENT</span>
+              │
+              ▼ await Task A
+              │
+              ├── <span class="cr">Task A failed</span> ──► return failure
+              │
+              └── <span class="cg">Task A succeeded</span>
+                      │
+                      │  Tool request JSON stored in ChatQueryRepository
+                      │
+                      ├──────────────────────────────────────────────────┐
+                      │ (parallel launch)                                │
+                      ▼                                                  ▼
+                  ModelContext += TaskA.NewModelContext        ┌───────────────────────┐
+                      │                                        │  <span class="ce">Task E</span>               │
+                      ▼                                        │  ToolCallValidation   │
+                  ┌───────────────────────┐                    │  "Was the tool call   │
+                  │  <span class="cd">Task D</span>               │                    │   correct?"           │
+                  │  AnalyzeTool          │                    └───────────────────────┘
+                  │  (fresh result)       │                          │
+                  └───────────────────────┘                          │
+                          │                                          │
+                          │                            ┌─────────────┴───────────────┐
+                          │                            │                             │
+                          │                         <span class="cg">VALID</span>                        <span class="cr">INVALID</span>
+                          │                            │                             │
+                          │                            │                    KickOffAED()
+                          │                            │                    (retry, max 2×):
+                          │                            │                      re-run Task A
+                          ▼                            │                      re-launch E &amp; D
+                  await Task D ◄───────────────────────┘
+                          │
+                          ▼
+                  Surface Task D response to user  ✓
+    </pre>
+  </div>
+
+  <h3>Key points — First Query</h3>
+  <ul class="steps">
+    <li>
+      <div class="step-num">1</div>
+      <div>Task Z and Task A are launched simultaneously. Task Z is awaited
+      first — if the user hasn't provided enough information, the flow stops
+      immediately and Task A's result (when it arrives) is discarded.</div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div>Once Task A succeeds, its three messages
+      (<code>FunctionCall</code>, <code>FunctionResult</code>,
+      <code>AssistantText</code>) are written permanently into
+      <code>ModelContext</code>.</div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div>Task E and Task D run in parallel. Task E validates the tool
+      request; Task D generates the user-facing analysis.</div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <div>If Task E returns INVALID, <code>KickOffAED()</code> injects Task
+      E's critique messages into the context for correction guidance, then
+      re-runs Tasks A, E, and D. Up to 2 retry attempts are made.</div>
+    </li>
+    <li>
+      <div class="step-num">5</div>
+      <div>Task D's deferred response is flushed to the user only after
+      Task E confirms validity (or retries are exhausted).</div>
+    </li>
+  </ul>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>Pattern 2 — Subsequent Queries</h2>
+
+  <p>
+    From the second query onward, validation (Tasks Z and E) is skipped. The
+    system bets on being able to <em>reuse</em> the prior simulation result and
+    races three tasks in parallel to minimise latency.
+  </p>
+
+  <div class="diagram">
+    <pre>
+  User Query
+      │
+      ▼  (added directly to ModelContext as User message)
+      │
+      ├──────────────────────────────────────────────────────────────────┐
+      │ (parallel launch — all three start immediately)                  │
+      ▼                          ▼                          ▼
+  ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────────┐
+  │  <span class="ca">Task A</span>            │   │  <span class="cb">Task B</span>            │   │  <span class="cc">Task C</span>               │
+  │  ToolCallSubAgent│   │  AnalyzeTool     │   │  NeedToolResponse    │
+  │  Calls MCP tool  │   │  (PRIOR result)  │   │  "Is a new tool call │
+  │  unconditionally │   │  Speculative     │   │   actually needed?"  │
+  └──────────────────┘   └──────────────────┘   └──────────────────────┘
+          │                      │                        │
+          │                      │                        │
+          └──────────────────────┴────────────────────────┘
+                                 │
+                    Task.WhenAny() race loop
+                                 │
+          ┌────────────────────────────────────────────┐
+          │                                            │
+          ▼                                            ▼
+  When Task A completes…              When Task C + Task B both complete…
+  (and Task D not yet started)               │
+          │                                  │
+          ▼                        ┌─────────┴──────────┐
+  context snapshot =               │                    │
+    ModelContext                   │                    │
+    + TaskA.NewMessages      <span class="cc">C = "reuse"</span>        <span class="cc">C = "call_tool"</span>
+          │                 (no new tool             (new tool
+          ▼                  needed)                  needed)
+  ┌──────────────────┐            │                    │
+  │  <span class="cd">Task D</span>            │            ▼             wait for Task D
+  │  AnalyzeTool     │  Use <span class="cb">Task B</span>'s         to complete
+  │  (FRESH result)  │  response  ✓                   │
+  └──────────────────┘                                 │
+          │                                            ▼
+          ▼                                    Use <span class="cd">Task D</span>'s
+  If Task D finishes first                     response  ✓
+  (before C+B decide) ──────────────► Task D wins immediately  ✓
+    </pre>
+  </div>
+
+  <h3>Key points — Subsequent Queries</h3>
+  <ul class="steps">
+    <li>
+      <div class="step-num">1</div>
+      <div>All three tasks start in parallel. Task A runs the simulation
+      unconditionally — it does not wait to hear Task C's verdict.</div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div>As soon as Task A finishes, its results are packaged into a new
+      context snapshot and Task D is launched. Task A's messages are
+      <strong>not</strong> written into <code>ModelContext</code> yet — only
+      the winning path does that.</div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div>If Task C concludes <code>reuse</code>/<code>answer_without_tool</code>
+      and Task B has already finished, Task B wins and Task A/D's work is
+      discarded. The shared <code>ModelContext</code> is not updated with the
+      unwanted tool call.</div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <div>If Task D finishes before C+B reach a joint conclusion, Task D
+      wins immediately — the race is over.</div>
+    </li>
+    <li>
+      <div class="step-num">5</div>
+      <div>Task C receives a <strong>summarised</strong> view of prior tool
+      responses (not the raw 400 KB payload) to keep its decision prompt
+      concise. The summary reads like: <em>"Tool returned simulation results
+      successfully (1 investor, 2 accounts, ~30 years of projections)."</em>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">6</div>
+      <div>Only the winning task's deferred logger is flushed to the user.
+      Both Task B and Task D write to independent
+      <code>DeferredDialogLogger</code> instances so their outputs don't
+      collide.</div>
+    </li>
+  </ul>
+
+  <div class="callout warn">
+    <strong>Trade-off:</strong> Task A always runs on subsequent queries, even
+    when the result is ultimately discarded (Task B wins). This wastes one MCP
+    call but minimises perceived latency: the new simulation result is ready
+    immediately if Task C decides it is needed.
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>Side-by-Side Comparison</h2>
+
+  <div class="task-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+    <div class="th" style="text-align:center">Step</div>
+    <div class="th" style="text-align:center">First Query</div>
+    <div class="th" style="text-align:center">Subsequent Queries</div>
+
+    <div class="td">Date preprocessing</div>
+    <div class="td">LLM rewrites query with explicit dates</div>
+    <div class="td">Query added to context as-is</div>
+
+    <div class="td">Sufficiency check</div>
+    <div class="td"><span class="badge badge-z">Task Z</span> runs (parallel with A)</div>
+    <div class="td">Skipped</div>
+
+    <div class="td">Tool call</div>
+    <div class="td"><span class="badge badge-a">Task A</span> — unconditional</div>
+    <div class="td"><span class="badge badge-a">Task A</span> — unconditional, parallel</div>
+
+    <div class="td">Speculative analysis</div>
+    <div class="td">None</div>
+    <div class="td"><span class="badge badge-b">Task B</span> — analyses prior result</div>
+
+    <div class="td">Tool-needed decision</div>
+    <div class="td">None (always calls tool)</div>
+    <div class="td"><span class="badge badge-c">Task C</span> — may short-circuit to Task B</div>
+
+    <div class="td">Fresh analysis</div>
+    <div class="td"><span class="badge badge-d">Task D</span> — after A succeeds</div>
+    <div class="td"><span class="badge badge-d">Task D</span> — after A, if C says "call_tool"</div>
+
+    <div class="td">Validation + retry</div>
+    <div class="td"><span class="badge badge-e">Task E</span> — up to 2 retries via KickOffAED</div>
+    <div class="td">Skipped</div>
+
+    <div class="td">Context written</div>
+    <div class="td">Task A messages appended before E/D</div>
+    <div class="td">Only if Task D wins (Task A messages appended then)</div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>Agent Detail Cards</h2>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span class="badge badge-z">Task Z</span>
+      <div class="agent-card-title">QuerySufficiencySubAgent</div>
+    </div>
+    <p><span class="label">System prompt</span> — <code>SystemPrompt-QuerySufficiency.txt</code></p>
+    <p><span class="label">Context view</span> — Only the system message + current user message. Ignores shared ModelContext entirely.</p>
+    <p><span class="label">Output</span> — JSON: <code>{ "judgement": "SUFFICIENT" | "NOT SUFFICIENT", "description": "…" }</code></p>
+    <p><span class="label">On NOT SUFFICIENT</span> — Logs <code>description</code> to user, calls <code>ModelContext.Clear()</code>, returns <code>true</code> (firstTime stays true next call).</p>
+    <p><span class="label">Failure behaviour</span> — Defaults to <code>SUFFICIENT</code> to avoid blocking valid queries.</p>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span class="badge badge-a">Task A</span>
+      <div class="agent-card-title">ToolCallSubAgent</div>
+    </div>
+    <p><span class="label">System prompt</span> — <code>SystemPrompt-ToolCallOnly.txt</code></p>
+    <p><span class="label">Context view</span> — <code>FetchCompactedContext(forceElideAllResponses: true)</code>. Old tool responses replaced with <code>"Data removed for brevity"</code>.</p>
+    <p><span class="label">Output</span> — Three <code>ChatMessage</code> objects: FunctionCall, FunctionResult, AssistantText. Tool request JSON stored in <code>ChatQueryRepository</code>.</p>
+    <p><span class="label">Retry</span> — Inner loop of up to 2 attempts for transient provider errors (<code>ArgumentOutOfRangeException</code>).</p>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span class="badge badge-b">Task B</span>
+      <div class="agent-card-title">AnalyzeToolResponseSubAgent (prior result)</div>
+    </div>
+    <p><span class="label">System prompt</span> — <code>SystemPrompt-AnalysisOnly.txt</code></p>
+    <p><span class="label">Context view</span> — <code>FetchCompactedContext()</code> <em>without</em> Task A's new messages — the prior tool result only.</p>
+    <p><span class="label">Tools</span> — None (<code>ChatToolMode.None</code>).</p>
+    <p><span class="label">Output</span> — User-facing natural-language response stored in a <code>DeferredDialogLogger</code>. Flushed only if Task B wins the race.</p>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span class="badge badge-c">Task C</span>
+      <div class="agent-card-title">NeedToolResponseSubAgent</div>
+    </div>
+    <p><span class="label">System prompt</span> — Built dynamically by <code>SystemPromptManager.GetToolNeededRawPrompt()</code>. Includes compacted prior context + full MCP schema.</p>
+    <p><span class="label">Context view</span> — Single System message (entire prompt is the system message). No conversation history passed.</p>
+    <p><span class="label">Output</span> — JSON: <code>{ "action": "call_tool" | "reuse" | "answer_without_tool" | "ask_clarifying_question" }</code></p>
+    <p><span class="label">Key optimization</span> — Large tool payloads (400 KB+) are summarised to ~150 chars before being embedded, preventing prompt overload.</p>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span class="badge badge-d">Task D</span>
+      <div class="agent-card-title">AnalyzeToolResponseSubAgent (fresh result)</div>
+    </div>
+    <p><span class="label">System prompt</span> — <code>SystemPrompt-AnalysisOnly.txt</code></p>
+    <p><span class="label">Context view</span> — <code>FetchCompactedContext()</code> <strong>after</strong> Task A's messages have been appended — includes the new simulation result.</p>
+    <p><span class="label">Tools</span> — None (<code>ChatToolMode.None</code>). Forbidden from invoking tools; must base answer on the RunSimulation output.</p>
+    <p><span class="label">Output</span> — User-facing natural-language response in a <code>DeferredDialogLogger</code>. Flushed if Task D wins.</p>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span class="badge badge-e">Task E</span>
+      <div class="agent-card-title">ToolCallValidationSubAgent</div>
+    </div>
+    <p><span class="label">System prompt</span> — Built dynamically by <code>SystemPromptManager.GetToolCallValidationRawPrompt()</code>. Includes the ToolCallOnly system prompt (for reference), the user query, the generated JSON, and the MCP schema.</p>
+    <p><span class="label">Context view</span> — Single System message. Completely isolated from ModelContext.</p>
+    <p><span class="label">Output</span> — Plain text containing <code>TOOL REQUEST VALID</code> or <code>TOOL REQUEST INVALID</code>.</p>
+    <p><span class="label">On INVALID</span> — Task E's messages are passed to <code>KickOffAED()</code> as correction guidance for the next attempt.</p>
+    <p><span class="label">Failure behaviour</span> — Technical exceptions return <code>IsSuccess = true</code> (cannot invalidate without a valid response).</p>
+  </div>
+
+  <hr />
+  <p style="color: var(--muted); font-size: 0.8rem; text-align: center;">
+    GreenAcres · Agent Project · Generated 2026-02-20
+  </p>
+
+</div>
+</body>
+</html>
