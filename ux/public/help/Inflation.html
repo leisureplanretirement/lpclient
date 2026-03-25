@@ -163,29 +163,37 @@
     <thead>
         <tr>
             <th>Scenario</th>
-            <th>How to Configure</th>
+            <th>Sample Chat Prompt</th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>Groceries growing with inflation</td>
-            <td>Set <code>projectionRateType: "Inflation"</code> → grows at <code>annualInflationRate</code> (2.5%)</td>
+            <td><em>"Add a grocery expense of $800/month that grows with inflation."</em></td>
         </tr>
         <tr>
             <td>Fixed mortgage payment</td>
-            <td>Set <code>projectionRateType: "Flat"</code> → amount never changes</td>
+            <td><em>"Add a mortgage payment of $2,200/month that stays flat — it never changes."</em></td>
         </tr>
         <tr>
             <td>Medical out-of-pocket costs</td>
-            <td>Set <code>category: "Medical"</code> → automatically grows at <code>annualMedicalInflationRate</code> (4.9%)</td>
+            <td><em>"Add a medical expense of $300/month for out-of-pocket costs."</em></td>
         </tr>
         <tr>
             <td>Social Security with COLA</td>
-            <td>Set <code>category: "SocialSecurity"</code> and <code>projectionRateType: "COLA"</code> → grows at <code>socialSecurityColaRate</code></td>
+            <td><em>"Add Social Security income of $2,400/month starting at age 67, growing with the Social Security COLA."</em></td>
         </tr>
         <tr>
             <td>Unusual expense with its own growth rate</td>
-            <td>Set <code>projectionRateType: "Manual"</code> and <code>manualProjectionRate: 0.07</code> → grows at 7%/year</td>
+            <td><em>"Add a club membership expense of $500/month that grows at 7% per year."</em></td>
+        </tr>
+        <tr>
+            <td>Change the global inflation assumption</td>
+            <td><em>"Set the annual inflation rate to 3%."</em></td>
+        </tr>
+        <tr>
+            <td>Change the medical inflation assumption</td>
+            <td><em>"Set the medical inflation rate to 6%."</em></td>
         </tr>
     </tbody>
 </table>
