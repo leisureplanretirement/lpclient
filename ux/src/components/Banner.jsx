@@ -58,6 +58,7 @@ const Banner = () => {
           <MenuItem onClick={() => handleNavigate('/', { state: { newChat: Date.now() } })}>New Chat</MenuItem>
           <MenuItem onClick={() => handleNavigate('/sessions')}>Sessions</MenuItem>
           <MenuItem onClick={() => handleNavigate('/settings')}>Settings</MenuItem>
+          <MenuItem onClick={() => handleNavigate('/help')}>Help</MenuItem>
           <MenuItem onClick={() => handleNavigate('/about')}>About</MenuItem>
         </Menu>
         <Box sx={{ flexGrow: 1 }}>

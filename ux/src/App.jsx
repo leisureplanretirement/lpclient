@@ -27,6 +27,7 @@ import PollingProgressBar from './components/PollingProgressBar';
 import ResultsWindow from './components/ResultsWindow';
 import About from './pages/About';
 import Admin from './pages/Admin';
+import Help from './pages/Help';
 import Plans from './pages/Plans';
 import Sessions from './pages/Sessions';
 import Settings from './pages/Settings';
@@ -609,6 +610,7 @@ function App() {
             <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
               <Routes>
                 <Route path="/about" element={<About />} />
+                <Route path="/help" element={<Help />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/plans" element={<Plans />} />
                 <Route path="/sessions" element={<Sessions />} />
