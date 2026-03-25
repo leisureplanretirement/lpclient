@@ -1,4 +1,4 @@
-import { Box, Divider, Typography } from '@mui/material';
+import { Box, Divider, Link, Typography } from '@mui/material';
 
 const Help = () => {
   return (
@@ -34,6 +34,15 @@ const Help = () => {
       <Typography variant="body2">
         Charts and tables appear in the results panel on the right. You can drag the
         divider between the chat and results panels to resize them.
+      </Typography>
+
+      <Divider sx={{ my: 3 }} />
+
+      <Typography variant="h6" sx={{ mb: 2 }}>Calculator Details</Typography>
+      <Typography variant="body2">
+        <Link href="/help/Inflation.html" target="_blank" rel="noopener noreferrer">
+          How Inflation Works
+        </Link>
       </Typography>
     </Box>
   );
