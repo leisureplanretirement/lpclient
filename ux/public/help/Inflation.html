@@ -57,105 +57,101 @@
 <h1>How Inflation Works in the Retirement Calculator</h1>
 
 <h2>The Four Inflation Assumptions</h2>
-<p>The calculator has four rate assumptions you can set in your scenario. Changing any of these affects every flow using that rate type at once.</p>
+<p>The calculator has four global rate assumptions. Changing any one of them affects every income or expense that uses that rate — you only need to set them once per scenario.</p>
 
 <table>
     <thead>
         <tr>
-            <th>Assumption</th>
+            <th>Rate</th>
             <th>Default</th>
             <th>What It Controls</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td><code>annualInflationRate</code></td>
+            <td>General inflation rate</td>
             <td>2.5%</td>
-            <td>General expenses and income tagged as <code>Inflation</code></td>
+            <td>Expenses and income you want to grow with the cost of living</td>
         </tr>
         <tr>
-            <td><code>annualMedicalInflationRate</code></td>
+            <td>Medical inflation rate</td>
             <td>4.9%</td>
-            <td>All medical expenses and Medicare premiums</td>
+            <td>Medical expenses and Medicare premiums</td>
         </tr>
         <tr>
-            <td><code>socialSecurityColaRate</code></td>
+            <td>Social Security COLA rate</td>
             <td>2.5%</td>
-            <td>Social Security income growth</td>
+            <td>How much your Social Security benefit grows each year</td>
         </tr>
         <tr>
-            <td><code>marketROR</code></td>
+            <td>Market rate of return</td>
             <td>5.0%</td>
-            <td>Controls how your investment account balances grow over time. It can also be applied to specific income or expense flows that you want to
-   scale with market returns by setting projectionRateType: <code>ROR</code></td>
+            <td>How your investment account balances grow over time</td>
         </tr>
     </tbody>
 </table>
 
-<h2>How Each Flow Grows Over Time</h2>
-<p>Every recurring income or expense has a <code>projectionRateType</code> that controls how its amount changes year over year:</p>
+<h2>How Each Income or Expense Grows Over Time</h2>
+<p>When you add an income or expense, you can tell the calculator how its amount should change each year. If you don't specify, it stays flat.</p>
 
 <table>
     <thead>
         <tr>
-            <th>Rate Type</th>
-            <th>Meaning</th>
+            <th>Growth type</th>
+            <th>What it means</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td><code>Flat</code></td>
-            <td>Amount never changes</td>
+            <td>Flat</td>
+            <td>Amount never changes — use this for fixed payments like a mortgage</td>
         </tr>
         <tr>
-            <td><code>Inflation</code></td>
-            <td>Grows at <code>annualInflationRate</code></td>
+            <td>Grows with inflation</td>
+            <td>Rises each year with the general inflation rate</td>
         </tr>
         <tr>
-            <td><code>ROR</code></td>
-            <td>Grows at <code>marketROR</code></td>
+            <td>Grows with market returns</td>
+            <td>Rises each year with the market rate of return</td>
         </tr>
         <tr>
-            <td><code>COLA</code></td>
-            <td>Grows at <code>socialSecurityColaRate</code></td>
+            <td>Grows with Social Security COLA</td>
+            <td>Rises each year with the Social Security COLA rate</td>
         </tr>
         <tr>
-            <td><code>MedicalInflation</code></td>
-            <td>Grows at <code>annualMedicalInflationRate</code></td>
+            <td>Grows with medical inflation</td>
+            <td>Rises each year with the medical inflation rate — applied automatically to medical expenses</td>
         </tr>
         <tr>
-            <td><code>Manual</code></td>
-            <td>Grows at a rate you specify per flow via <code>manualProjectionRate</code> (e.g. <code>0.06</code> for 6%/year)</td>
+            <td>Custom rate</td>
+            <td>Rises at a specific percentage you provide — for expenses that don't fit any global assumption</td>
         </tr>
     </tbody>
 </table>
 
-<h2>Automatic Behavior by Category</h2>
-<p>You don't need to set <code>projectionRateType</code> manually for medical or Social Security flows — the calculator applies the right rate automatically based on category.</p>
+<h2>What the Calculator Does Automatically</h2>
+<p>For certain categories you don't need to specify a growth type — the calculator infers it from context.</p>
 
-<h3>Medical Expenses (<code>category: "Medical"</code>)</h3>
+<h3>Medical Expenses</h3>
 <ul>
-    <li>Automatically grow at <code>annualMedicalInflationRate</code></li>
-    <li>You can override by explicitly setting <code>projectionRateType</code> to <code>Flat</code>, <code>Inflation</code>, or <code>Manual</code></li>
-    <li>Setting <code>ROR</code> or <code>COLA</code> on a medical flow is not meaningful and falls back to <code>MedicalInflation</code></li>
+    <li>Automatically grow at the medical inflation rate when you describe an expense as medical</li>
+    <li>You can override this by explicitly saying "keep it flat" or "grow it with general inflation"</li>
 </ul>
 
 <h3>Medicare Premiums</h3>
 <ul>
-    <li>Projected forward automatically from the most recent Medicare data year using <code>annualMedicalInflationRate</code></li>
-    <li>No action needed — you do not specify these as cash flows</li>
+    <li>Calculated and projected automatically — you do not need to add these as separate expenses</li>
 </ul>
 
-<h3>Social Security Income (<code>category: "SocialSecurity"</code>)</h3>
+<h3>Social Security</h3>
 <ul>
-    <li>Set <code>projectionRateType: "COLA"</code> to grow at <code>socialSecurityColaRate</code></li>
-    <li>You can override with <code>Flat</code>, <code>Inflation</code>, or <code>Manual</code></li>
-    <li>Setting <code>ROR</code> on an SS flow is not meaningful and falls back to <code>COLA</code></li>
+    <li>Grows with the Social Security COLA rate when you describe income as Social Security</li>
+    <li>You can override with "keep it flat" or a custom rate if needed</li>
 </ul>
 
-<h3>All Other Flows</h3>
+<h3>Everything Else</h3>
 <ul>
-    <li>Default is <code>Flat</code> — no growth unless you explicitly set a <code>projectionRateType</code></li>
+    <li>Stays flat by default — mention how you want it to grow if you want it to change over time</li>
 </ul>
 
 <h2>Practical Examples</h2>
@@ -199,8 +195,7 @@
 </table>
 
 <div class="callout">
-    <strong>Key point:</strong> The four assumption rates are global dials — changing one affects every flow using that rate type at once. Use <code>Manual</code> with a per-flow rate
-for expenses that don't fit the global assumptions.
+    <strong>Key point:</strong> The four rates are global — changing one affects every income and expense that uses it. For anything that doesn't fit neatly into a global assumption, just tell the calculator a specific percentage and it will use that for that item only.
 </div>
 
 </body>
