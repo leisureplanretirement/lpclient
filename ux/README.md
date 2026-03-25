@@ -1,7 +1,7 @@
-# GreenAcres.UX
+# lpclient
 
-GreenAcres.UX is the front-end for <span style="color: blue;">LeisurePlan.app</span>.
-The back end is the [GreenAcres](https://github.com/rwoodley/GreenAcres/blob/main/README.md) project.
+lpclient is the front-end for <span style="color: blue;">LeisurePlan.app</span>.
+The back end is the [lpserver](https://github.com/leisureplanretirement/lpserver/blob/main/README.md) project.
 
 
 ## Setup
@@ -28,8 +28,8 @@ npm run deploy
 
 ### Running System Locally
 
-Note: GreenAcres.ux is currently configured to point to the production back-end, namely: https://bmhtdwxiwr.us-east-1.awsapprunner.com/
-If you want to point to the local back-end, either the container (port 8080) or running in VSCode (port 7299), then in your local instance of the React front end you need to change references to `bmhtdwxiwr.us-east-1.awsapprunner.com` to `localhost:port`.  
+Note: lpclient is currently configured to point to the production back-end, namely: https://hra6235cvu.us-east-2.awsapprunner.com/
+If you want to point to the local back-end, either the container (port 8080) or running in VSCode (port 7299), then in your local instance of the React front end you need to change references to `hra6235cvu.us-east-2.awsapprunner.com` to `localhost:port`.  
 
 
 ## Notes

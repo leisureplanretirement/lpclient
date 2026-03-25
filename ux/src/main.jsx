@@ -17,7 +17,8 @@ createRoot(document.getElementById('root')).render(
     authorizationParams={{
       redirect_uri: window.location.origin + import.meta.env.BASE_URL,
       audience: audience,
-      scope: "openid profile email offline_access"
+      scope: "openid profile email offline_access",
+      prompt: "select_account"
     }}
     cacheLocation="localstorage"
     useRefreshTokens={true}

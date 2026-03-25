@@ -25,6 +25,7 @@ import Banner from './components/Banner';
 import ChatWindow from './components/ChatWindow';
 import PollingProgressBar from './components/PollingProgressBar';
 import ResultsWindow from './components/ResultsWindow';
+import About from './pages/About';
 import Admin from './pages/Admin';
 import Plans from './pages/Plans';
 import Sessions from './pages/Sessions';
@@ -607,6 +608,7 @@ function App() {
             <Banner />
             <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
               <Routes>
+                <Route path="/about" element={<About />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/plans" element={<Plans />} />
                 <Route path="/sessions" element={<Sessions />} />
