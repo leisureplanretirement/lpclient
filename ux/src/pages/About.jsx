@@ -33,7 +33,7 @@ const About = () => {
 
       <Typography variant="h6" sx={{ mb: 1 }}>Legal</Typography>
       <Typography variant="body2">
-        <Link href="/TermsOfUse.html" target="_blank" rel="noopener noreferrer">
+        <Link href="/Legal/TermsOfUse.html" target="_blank" rel="noopener noreferrer">
           Terms of Use
         </Link>
       </Typography>
