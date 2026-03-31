@@ -129,6 +129,14 @@ const Billing = () => {
 
   const userId = records.length > 0 ? records[0][USER_ID_KEY] : null;
 
+  const totalDiscountedCost = useMemo(() => {
+    if (records.length === 0) return null;
+    const key = Object.keys(records[0]).find(k => k.toLowerCase().includes('discount'));
+    if (!key) return null;
+    const total = records.reduce((sum, r) => sum + (typeof r[key] === 'number' ? r[key] : 0), 0);
+    return total;
+  }, [records]);
+
   const handleLoadSession = async (sessionId) => {
     try {
       const token = await getAccessTokenSilently();
@@ -191,10 +199,19 @@ const Billing = () => {
     <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
       <Typography variant="h5" sx={{ mb: 2 }}>Billing</Typography>
 
-      {userId && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          <strong>User ID:</strong> {userId}
-        </Typography>
+      {(userId || totalDiscountedCost !== null) && (
+        <Box sx={{ display: 'flex', gap: 4, mb: 2, flexWrap: 'wrap' }}>
+          {userId && (
+            <Typography variant="body2" color="text.secondary">
+              <strong>User ID:</strong> {userId}
+            </Typography>
+          )}
+          {totalDiscountedCost !== null && (
+            <Typography variant="body2" color="text.secondary">
+              <strong>Total Discounted Cost:</strong> ${totalDiscountedCost.toFixed(4)}
+            </Typography>
+          )}
+        </Box>
       )}
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
