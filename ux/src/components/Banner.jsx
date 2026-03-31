@@ -1,6 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import MenuIcon from '@mui/icons-material/Menu';
-import { AppBar, Box, Button, IconButton, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
+import { AppBar, Avatar, Box, Button, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -71,9 +71,14 @@ const Banner = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {isAuthenticated ? (
               <>
-                <Typography variant="body2" sx={{ color: '#fff' }}>
-                  {user?.name || user?.email}
-                </Typography>
+                <Tooltip title={user?.name || user?.email || ''}>
+                  <Avatar
+                    src={user?.picture}
+                    alt={user?.name || user?.email}
+                    sx={{ width: 32, height: 32 }}
+                    slotProps={{ img: { referrerPolicy: 'no-referrer' } }}
+                  />
+                </Tooltip>
                 <Button
                   variant="outlined"
                   onClick={handleLogout}
