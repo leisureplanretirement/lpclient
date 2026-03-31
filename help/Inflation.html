@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>How Inflation Works in the Retirement Calculator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 860px;
+            margin: 40px auto;
+            padding: 0 24px;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        h1 { font-size: 1.8rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+        h2 { font-size: 1.2rem; margin-top: 36px; color: #2c2c2c; }
+        h3 { font-size: 1rem; margin-top: 28px; color: #2c2c2c; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+        th {
+            background: #f5f5f5;
+            text-align: left;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+        }
+        td {
+            padding: 9px 14px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        tr:nth-child(even) td { background: #fafafa; }
+        code {
+            background: #f0f0f0;
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 0.9em;
+            font-family: "SFMono-Regular", Consolas, monospace;
+        }
+        .callout {
+            background: #f0f7ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+<h1>How Inflation Works in the Retirement Calculator</h1>
+
+<h2>The Four Inflation Assumptions</h2>
+<p>The calculator has four global rate assumptions. Changing any one of them affects every income or expense that uses that rate — you only need to set them once per scenario.</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Rate</th>
+            <th>Default</th>
+            <th>What It Controls</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>General inflation rate</td>
+            <td>2.5%</td>
+            <td>Expenses and income you want to grow with the cost of living</td>
+        </tr>
+        <tr>
+            <td>Medical inflation rate</td>
+            <td>4.9%</td>
+            <td>Medical expenses and Medicare premiums</td>
+        </tr>
+        <tr>
+            <td>Social Security COLA rate</td>
+            <td>2.5%</td>
+            <td>How much your Social Security benefit grows each year</td>
+        </tr>
+        <tr>
+            <td>Market rate of return</td>
+            <td>5.0%</td>
+            <td>How your investment account balances grow over time</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>How Each Income or Expense Grows Over Time</h2>
+<p>When you add an income or expense, you can tell the calculator how its amount should change each year. If you don't specify, it stays flat.</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Growth type</th>
+            <th>What it means</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Flat</td>
+            <td>Amount never changes — use this for fixed payments like a mortgage</td>
+        </tr>
+        <tr>
+            <td>Grows with inflation</td>
+            <td>Rises each year with the general inflation rate</td>
+        </tr>
+        <tr>
+            <td>Grows with market returns</td>
+            <td>Rises each year with the market rate of return</td>
+        </tr>
+        <tr>
+            <td>Grows with Social Security COLA</td>
+            <td>Rises each year with the Social Security COLA rate</td>
+        </tr>
+        <tr>
+            <td>Grows with medical inflation</td>
+            <td>Rises each year with the medical inflation rate — applied automatically to medical expenses</td>
+        </tr>
+        <tr>
+            <td>Custom rate</td>
+            <td>Rises at a specific percentage you provide — for expenses that don't fit any global assumption</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>What the Calculator Does Automatically</h2>
+<p>For certain categories you don't need to specify a growth type — the calculator infers it from context.</p>
+
+<h3>Medical Expenses</h3>
+<ul>
+    <li>Automatically grow at the medical inflation rate when you describe an expense as medical</li>
+    <li>You can override this by explicitly saying "keep it flat" or "grow it with general inflation"</li>
+</ul>
+
+<h3>Medicare Premiums</h3>
+<ul>
+    <li>Calculated and projected automatically — you do not need to add these as separate expenses</li>
+</ul>
+
+<h3>Social Security</h3>
+<ul>
+    <li>Grows with the Social Security COLA rate when you describe income as Social Security</li>
+    <li>You can override with "keep it flat" or a custom rate if needed</li>
+</ul>
+
+<h3>Everything Else</h3>
+<ul>
+    <li>Stays flat by default — mention how you want it to grow if you want it to change over time</li>
+</ul>
+
+<h2>Practical Examples</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Scenario</th>
+            <th>Sample Chat Prompt</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Groceries growing with inflation</td>
+            <td><em>"Add a grocery expense of $800/month that grows with inflation."</em></td>
+        </tr>
+        <tr>
+            <td>Fixed mortgage payment</td>
+            <td><em>"Add a mortgage payment of $2,200/month that stays flat — it never changes."</em></td>
+        </tr>
+        <tr>
+            <td>Medical out-of-pocket costs</td>
+            <td><em>"Add a medical expense of $300/month for out-of-pocket costs."</em></td>
+        </tr>
+        <tr>
+            <td>Social Security with COLA</td>
+            <td><em>"Add Social Security income of $2,400/month starting at age 67, growing with the Social Security COLA."</em></td>
+        </tr>
+        <tr>
+            <td>Unusual expense with its own growth rate</td>
+            <td><em>"Add a club membership expense of $500/month that grows at 7% per year."</em></td>
+        </tr>
+        <tr>
+            <td>Change the global inflation assumption</td>
+            <td><em>"Set the annual inflation rate to 3%."</em></td>
+        </tr>
+        <tr>
+            <td>Change the medical inflation assumption</td>
+            <td><em>"Set the medical inflation rate to 6%."</em></td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="callout">
+    <strong>Key point:</strong> The four rates are global — changing one affects every income and expense that uses it. For anything that doesn't fit neatly into a global assumption, just tell the calculator a specific percentage and it will use that for that item only.
+</div>
+
+</body>
+</html>
