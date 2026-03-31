@@ -5,8 +5,6 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import {
   Box,
   CircularProgress,
-  IconButton,
-  InputAdornment,
   Paper,
   Table,
   TableBody,
@@ -21,6 +19,15 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { fetchBillingRecords } from '../api';
 
+// Key whose value is hoisted above the table (same for every row)
+const USER_ID_KEY = 'userId';
+
+// UUID fields: show only the first segment (before the first '-'), tooltip shows full value
+const UUID_SHORT_KEYS = new Set(['sessionId', 'queryId']);
+
+// Text fields: truncate to 20 chars, tooltip shows full value
+const SNIPPET_KEYS = new Set(['querySnippet', 'snippet', 'message', 'query']);
+
 function camelToTitle(str) {
   return str
     .replace(/([A-Z])/g, ' $1')
@@ -28,7 +35,7 @@ function camelToTitle(str) {
     .trim();
 }
 
-function formatCell(key, value) {
+function formatValue(key, value) {
   if (value === null || value === undefined) return '—';
   const lk = key.toLowerCase();
   if (lk.includes('timestamp') || lk.includes('date') || lk.includes('time')) {
@@ -42,6 +49,29 @@ function formatCell(key, value) {
   return String(value);
 }
 
+function CellContent({ col, value }) {
+  const formatted = formatValue(col, value);
+
+  if (UUID_SHORT_KEYS.has(col) && typeof value === 'string' && value.includes('-')) {
+    const short = value.split('-')[0];
+    return (
+      <Tooltip title={value} placement="top">
+        <span style={{ cursor: 'default', fontFamily: 'monospace' }}>{short}…</span>
+      </Tooltip>
+    );
+  }
+
+  if (SNIPPET_KEYS.has(col) && typeof value === 'string' && value.length > 20) {
+    return (
+      <Tooltip title={value} placement="top">
+        <span style={{ cursor: 'default' }}>{value.slice(0, 20)}…</span>
+      </Tooltip>
+    );
+  }
+
+  return <>{formatted}</>;
+}
+
 function SortIcon({ dir }) {
   if (dir === 'asc') return <ArrowUpwardIcon fontSize="inherit" />;
   if (dir === 'desc') return <ArrowDownwardIcon fontSize="inherit" />;
@@ -53,8 +83,12 @@ const Billing = () => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const [fromDate, setFromDate] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return d.toISOString().slice(0, 10);
+  });
+  const [toDate, setToDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [filterText, setFilterText] = useState('');
   const [sortField, setSortField] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
@@ -79,9 +113,11 @@ const Billing = () => {
     load();
   }, [isLoading, isAuthenticated, getAccessTokenSilently, fromDate, toDate]);
 
+  const userId = records.length > 0 ? records[0][USER_ID_KEY] : null;
+
   const columns = useMemo(() => {
     if (records.length === 0) return [];
-    return Object.keys(records[0]);
+    return Object.keys(records[0]).filter(k => k !== USER_ID_KEY);
   }, [records]);
 
   const handleSort = (field) => {
@@ -130,6 +166,12 @@ const Billing = () => {
   return (
     <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
       <Typography variant="h5" sx={{ mb: 2 }}>Billing</Typography>
+
+      {userId && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <strong>User ID:</strong> {userId}
+        </Typography>
+      )}
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
@@ -200,7 +242,7 @@ const Billing = () => {
                   <TableRow key={i} sx={{ '&:last-child td': { border: 0 } }}>
                     {columns.map(col => (
                       <TableCell key={col} sx={{ whiteSpace: 'nowrap' }}>
-                        {formatCell(col, row[col])}
+                        <CellContent col={col} value={row[col]} />
                       </TableCell>
                     ))}
                   </TableRow>
