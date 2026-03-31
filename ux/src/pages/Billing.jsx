@@ -17,7 +17,8 @@ import {
   Typography
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { fetchBillingRecords } from '../api';
+import { useNavigate } from 'react-router-dom';
+import { fetchBillingRecords, fetchSession } from '../api';
 
 // Key whose value is hoisted above the table (same for every row)
 const USER_ID_KEY = 'userId';
@@ -49,11 +50,23 @@ function formatValue(key, value) {
   return String(value);
 }
 
-function CellContent({ col, value }) {
+function CellContent({ col, value, onSessionClick }) {
   const formatted = formatValue(col, value);
 
   if (UUID_SHORT_KEYS.has(col) && typeof value === 'string' && value.includes('-')) {
     const short = value.split('-')[0];
+    if (col === 'sessionId' && onSessionClick) {
+      return (
+        <Tooltip title={value} placement="top">
+          <span
+            onClick={() => onSessionClick(value)}
+            style={{ cursor: 'pointer', fontFamily: 'monospace', color: '#1976d2', textDecoration: 'underline' }}
+          >
+            {short}…
+          </span>
+        </Tooltip>
+      );
+    }
     return (
       <Tooltip title={value} placement="top">
         <span style={{ cursor: 'default', fontFamily: 'monospace' }}>{short}…</span>
@@ -80,6 +93,7 @@ function SortIcon({ dir }) {
 
 const Billing = () => {
   const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
+  const navigate = useNavigate();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -114,6 +128,16 @@ const Billing = () => {
   }, [isLoading, isAuthenticated, getAccessTokenSilently, fromDate, toDate]);
 
   const userId = records.length > 0 ? records[0][USER_ID_KEY] : null;
+
+  const handleLoadSession = async (sessionId) => {
+    try {
+      const token = await getAccessTokenSilently();
+      const sessionData = await fetchSession(sessionId, token);
+      navigate('/', { state: { sessionId: sessionData.sessionId, queryId: sessionData.lastSuccessfulQueryId } });
+    } catch (e) {
+      alert('Failed to load session: ' + e.message);
+    }
+  };
 
   const columns = useMemo(() => {
     if (records.length === 0) return [];
@@ -242,7 +266,7 @@ const Billing = () => {
                   <TableRow key={i} sx={{ '&:last-child td': { border: 0 } }}>
                     {columns.map(col => (
                       <TableCell key={col} sx={{ whiteSpace: 'nowrap' }}>
-                        <CellContent col={col} value={row[col]} />
+                        <CellContent col={col} value={row[col]} onSessionClick={handleLoadSession} />
                       </TableCell>
                     ))}
                   </TableRow>
