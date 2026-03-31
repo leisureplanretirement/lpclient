@@ -1,11 +1,12 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import MenuIcon from '@mui/icons-material/Menu';
-import { AppBar, Avatar, Box, Button, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography } from '@mui/material';
+import { AppBar, Avatar, Box, Button, Divider, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Banner = () => {
   const [anchorEl, setAnchorEl] = useState(null);
+  const [userAnchorEl, setUserAnchorEl] = useState(null);
   const navigate = useNavigate();
   const { isAuthenticated, loginWithRedirect, logout, user, isLoading } = useAuth0();
 
@@ -75,24 +76,22 @@ const Banner = () => {
                   <Avatar
                     src={user?.picture}
                     alt={user?.name || user?.email}
-                    sx={{ width: 32, height: 32 }}
+                    sx={{ width: 32, height: 32, cursor: 'pointer' }}
                     slotProps={{ img: { referrerPolicy: 'no-referrer' } }}
+                    onClick={e => setUserAnchorEl(e.currentTarget)}
                   />
                 </Tooltip>
-                <Button
-                  variant="outlined"
-                  onClick={handleLogout}
-                  sx={{
-                    color: '#fff',
-                    borderColor: '#fff',
-                    '&:hover': {
-                      borderColor: '#fff',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                    }
-                  }}
+                <Menu
+                  anchorEl={userAnchorEl}
+                  open={Boolean(userAnchorEl)}
+                  onClose={() => setUserAnchorEl(null)}
                 >
-                  Logout
-                </Button>
+                  <MenuItem disabled sx={{ opacity: '1 !important' }}>
+                    <Typography variant="body2">{user?.name || user?.email}</Typography>
+                  </MenuItem>
+                  <Divider />
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                </Menu>
               </>
             ) : (
               <Button
