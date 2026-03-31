@@ -235,6 +235,20 @@ export async function deleteSession(sessionId, token) {
   }
 }
 
+// GET /api/Billing/Records?from=...&to=...
+export async function fetchBillingRecords(token, from, to) {
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const res = await fetch(`${API_BASE}/Billing/Records${query}`, {
+    headers: buildHeaders(token)
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error('Failed to load billing records');
+  return JSON.parse(text);
+}
+
 // PUT /api/Session/Update
 export async function updateSession(sessionId, name, token) {
   const res = await fetch(`${API_BASE}/Session/Update`, {
