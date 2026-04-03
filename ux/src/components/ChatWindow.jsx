@@ -48,7 +48,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
-const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating }) => {
+const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance }) => {
   const theme = useTheme();
   const [inputValue, setInputValue] = useState('');
   const [lastUserMessageIndex, setLastUserMessageIndex] = useState(-1);
@@ -222,7 +222,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             placeholder={isAuthenticated ? "Type your message..." : "Please login."}
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
-            disabled={loading || !isAuthenticated || isImpersonating}
+            disabled={loading || !isAuthenticated || isImpersonating || lowBalance}
             multiline
             maxRows={4}
           />
@@ -230,7 +230,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             type="submit"
             variant="contained"
             color="primary"
-            disabled={loading || !inputValue.trim() || !isAuthenticated || isImpersonating}
+            disabled={loading || !inputValue.trim() || !isAuthenticated || isImpersonating || lowBalance}
             sx={{ minWidth: 80 }}
           >
             Send

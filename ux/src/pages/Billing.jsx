@@ -3,9 +3,11 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import {
+  Alert,
   Box,
   CircularProgress,
   Paper,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
@@ -18,7 +20,8 @@ import {
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchBillingRecords, fetchSession } from '../api';
+import AddFundsFlow from '../components/AddFundsFlow';
+import { fetchBillingRecords, fetchSession, getBillingBalance } from '../api';
 
 // Key whose value is hoisted above the table (same for every row)
 const USER_ID_KEY = 'userId';
@@ -43,6 +46,9 @@ function formatValue(key, value) {
     const d = new Date(value);
     if (!isNaN(d)) return d.toLocaleString();
   }
+  if (lk.includes('balance') && typeof value === 'number') {
+    return `$${value.toFixed(2)}`;
+  }
   if ((lk.includes('amount') || lk.includes('cost') || lk.includes('total') || lk.includes('price')) && typeof value === 'number') {
     return `$${value.toFixed(4)}`;
   }
@@ -50,28 +56,45 @@ function formatValue(key, value) {
   return String(value);
 }
 
+function ShortUuid({ value, onClick }) {
+  const short = value.split('-')[0];
+  return (
+    <Tooltip title={value} placement="top">
+      <span
+        onClick={onClick}
+        style={{ cursor: onClick ? 'pointer' : 'default', fontFamily: 'monospace', color: onClick ? '#1976d2' : undefined, textDecoration: onClick ? 'underline' : undefined }}
+      >
+        {short}…
+      </span>
+    </Tooltip>
+  );
+}
+
 function CellContent({ col, value, onSessionClick }) {
+  // Render deduction object: show session id, query id, token counts
+  if (col === 'deduction') {
+    if (!value) return <>—</>;
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, fontSize: '0.75rem' }}>
+        {value.sessionId && (
+          <Box><span style={{ color: 'text.secondary' }}>sess: </span>
+            <ShortUuid value={value.sessionId} onClick={onSessionClick ? () => onSessionClick(value.sessionId) : undefined} />
+          </Box>
+        )}
+        {value.queryId && (
+          <Box><span>qry: </span><ShortUuid value={value.queryId} /></Box>
+        )}
+        {value.inputTokens != null && (
+          <Box>in: {value.inputTokens.toLocaleString()} / out: {value.outputTokens?.toLocaleString() ?? '—'}</Box>
+        )}
+      </Box>
+    );
+  }
+
   const formatted = formatValue(col, value);
 
   if (UUID_SHORT_KEYS.has(col) && typeof value === 'string' && value.includes('-')) {
-    const short = value.split('-')[0];
-    if (col === 'sessionId' && onSessionClick) {
-      return (
-        <Tooltip title={value} placement="top">
-          <span
-            onClick={() => onSessionClick(value)}
-            style={{ cursor: 'pointer', fontFamily: 'monospace', color: '#1976d2', textDecoration: 'underline' }}
-          >
-            {short}…
-          </span>
-        </Tooltip>
-      );
-    }
-    return (
-      <Tooltip title={value} placement="top">
-        <span style={{ cursor: 'default', fontFamily: 'monospace' }}>{short}…</span>
-      </Tooltip>
-    );
+    return <ShortUuid value={value} onClick={col === 'sessionId' && onSessionClick ? () => onSessionClick(value) : undefined} />;
   }
 
   if (SNIPPET_KEYS.has(col) && typeof value === 'string' && value.length > 20) {
@@ -91,12 +114,13 @@ function SortIcon({ dir }) {
   return <UnfoldMoreIcon fontSize="inherit" sx={{ opacity: 0.4 }} />;
 }
 
-const Billing = () => {
+const Billing = ({ balance, onBalanceUpdate }) => {
   const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
     d.setMonth(d.getMonth() - 1);
@@ -106,6 +130,25 @@ const Billing = () => {
   const [filterText, setFilterText] = useState('');
   const [sortField, setSortField] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
+
+  // Fetch fresh balance on mount; also handle ?payment=success
+  useEffect(() => {
+    if (isLoading || !isAuthenticated) return;
+    const init = async () => {
+      try {
+        const token = await getAccessTokenSilently();
+        const { balanceUsd } = await getBillingBalance(token);
+        onBalanceUpdate(balanceUsd);
+      } catch {}
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('payment') === 'success') {
+        setPaymentSuccessOpen(true);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+    init();
+  }, [isLoading, isAuthenticated]);
 
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
@@ -197,7 +240,32 @@ const Billing = () => {
 
   return (
     <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
+      <Snackbar
+        open={paymentSuccessOpen}
+        autoHideDuration={6000}
+        onClose={() => setPaymentSuccessOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setPaymentSuccessOpen(false)}>
+          Payment successful — your balance has been updated.
+        </Alert>
+      </Snackbar>
+
       <Typography variant="h5" sx={{ mb: 2 }}>Billing</Typography>
+
+      {/* Balance display */}
+      <Box sx={{ mb: 3 }}>
+        <Typography
+          variant="h4"
+          sx={{ color: balance !== null && balance < 0.05 ? 'warning.main' : 'text.primary' }}
+        >
+          {balance !== null ? `$${balance.toFixed(2)}` : '—'}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Current balance{balance !== null && balance < 0.05 ? ' — low, please add funds' : ''}
+        </Typography>
+        <AddFundsFlow />
+      </Box>
 
       {(userId || totalDiscountedCost !== null) && (
         <Box sx={{ display: 'flex', gap: 4, mb: 2, flexWrap: 'wrap' }}>

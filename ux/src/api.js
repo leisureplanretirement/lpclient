@@ -10,6 +10,15 @@ export class ApiError extends Error {
   }
 }
 
+// Custom error for 402 Payment Required
+export class InsufficientBalanceError extends Error {
+  constructor(balanceUsd, message) {
+    super(message || 'Insufficient balance');
+    this.balanceUsd = balanceUsd;
+    this.name = 'InsufficientBalanceError';
+  }
+}
+
 // Helper to build headers with optional auth token and impersonation
 function buildHeaders(token, includeImpersonation = true) {
   const headers = { 'Content-Type': 'application/json' };
@@ -41,6 +50,11 @@ export async function sendMessage(message, sessionId, token) {
   });
   const text = await res.text();
   if (!res.ok) {
+    if (res.status === 402) {
+      let body;
+      try { body = JSON.parse(text); } catch { body = {}; }
+      throw new InsufficientBalanceError(body.balanceUsd ?? null, body.message);
+    }
     if (res.status === 500) {
       const firstLine = text.split('\n')[0];
       const details = text.includes('\n') ? text : null;
@@ -103,14 +117,14 @@ export async function fetchLatestChart(sessionId, chartType, token) {
 }
 
 // GET /api/chat/QueryStatus?sessionId=...&queryId=...
+// Returns { status, balanceUsd?, queryCostUsd? }
 export async function fetchQueryStatus(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/QueryStatus?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  const trimmedText = text.trim();
   if (!res.ok) throw new Error('Failed to fetch query status');
-  return trimmedText;
+  return JSON.parse(text);
 }
 
 // GET /api/chat/FlowsTable?sessionId=...&queryId=...
@@ -246,6 +260,28 @@ export async function fetchBillingRecords(token, from, to) {
   });
   const text = await res.text();
   if (!res.ok) throw new Error('Failed to load billing records');
+  return JSON.parse(text);
+}
+
+// GET /api/billing/Balance
+export async function getBillingBalance(token) {
+  const res = await fetch(`${API_BASE}/billing/Balance`, {
+    headers: buildHeaders(token)
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error('Failed to load billing balance');
+  return JSON.parse(text);
+}
+
+// POST /api/billing/TopUp
+export async function createTopUpSession(priceId, token) {
+  const res = await fetch(`${API_BASE}/billing/TopUp`, {
+    method: 'POST',
+    headers: buildHeaders(token),
+    body: JSON.stringify({ priceId }),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error('Failed to create top-up session');
   return JSON.parse(text);
 }
 

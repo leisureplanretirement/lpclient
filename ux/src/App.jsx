@@ -5,8 +5,10 @@ import { ThemeProvider } from '@mui/material/styles';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Snackbar, Alert } from '@mui/material';
 import {
   ApiError,
+  InsufficientBalanceError,
   fetchAnnualTable,
   fetchChart,
   fetchChatDialog,
@@ -19,10 +21,12 @@ import {
   fetchQueryStatus,
   fetchRetirementInputs,
   fetchSummaryTable,
+  getBillingBalance,
   sendMessage
 } from './api';
 import Banner from './components/Banner';
 import ChatWindow from './components/ChatWindow';
+import LowBalanceBanner from './components/LowBalanceBanner';
 import PollingProgressBar from './components/PollingProgressBar';
 import ResultsWindow from './components/ResultsWindow';
 import About from './pages/About';
@@ -75,7 +79,7 @@ function formatEntries(obj) {
   });
 }
 
-function MainChat() {
+function MainChat({ onBalanceUpdate }) {
   const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
@@ -98,6 +102,8 @@ function MainChat() {
   const [selectedQueryId, setSelectedQueryId] = useState(null);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
   const hasLoadedSessionRef = useRef(false);
+  const [lowBalance, setLowBalance] = useState(false);
+  const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
 
   // Helper function to get appropriate welcome message based on auth state
   const getWelcomeMessage = (isAuth) => {
@@ -197,6 +203,24 @@ function MainChat() {
     loadSessionFromState();
   }, [isAuthenticated, isLoading, location.state]);
 
+  // Handle ?payment=success return from Stripe
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('payment') === 'success' && isAuthenticated && !isLoading) {
+      const refresh = async () => {
+        try {
+          const token = await getAccessTokenSilently();
+          const { balanceUsd } = await getBillingBalance(token);
+          onBalanceUpdate(balanceUsd);
+          setLowBalance(false);
+          setPaymentSuccessOpen(true);
+        } catch {}
+      };
+      refresh();
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, isLoading]);
+
   // Handle "New Chat" from menu
   useEffect(() => {
     if (location.state?.newChat) {
@@ -232,7 +256,10 @@ function MainChat() {
       setMessages((msgs) => [...msgs, { sender: 'agent', text: res.reply || 'Message sent. Waiting for results...', queryId: res.chatQueryId }]);
       pollQueryStatus(res.chatSessionId, res.chatQueryId);
     } catch (e) {
-      if (e instanceof ApiError && e.details) {
+      if (e instanceof InsufficientBalanceError) {
+        setLowBalance(true);
+        if (e.balanceUsd !== null && e.balanceUsd !== undefined) onBalanceUpdate(e.balanceUsd);
+      } else if (e instanceof ApiError && e.details) {
         setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Error: ' + e.message, errorDetails: e.details }]);
       } else {
         setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Error: ' + e.message }]);
@@ -251,7 +278,8 @@ function MainChat() {
       const currentPoll = pollCount + 1;
       try {
         const token = await getAccessTokenSilently();
-        const status = await fetchQueryStatus(sessId, qId, token);
+        const statusData = await fetchQueryStatus(sessId, qId, token);
+        const status = statusData.status;
         setQueryStatus(status);
         if (status === 'Working' || status === 'Preprocessing') {
           // Update dialog while working
@@ -264,6 +292,9 @@ function MainChat() {
           }
           if (currentPoll < maxPolls) setTimeout(poll, 1000);
         } else if (status === 'Done') {
+          if (statusData.balanceUsd !== null && statusData.balanceUsd !== undefined) {
+            onBalanceUpdate(statusData.balanceUsd);
+          }
           await loadResults(sessId, qId, true); // Use latest endpoints for new query
           await updateMessagesFromDialog(sessId, qId);
         } else if (status === 'Failed') {
@@ -462,6 +493,17 @@ function MainChat() {
 
   return (
     <Box ref={containerRef} sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <Snackbar
+        open={paymentSuccessOpen}
+        autoHideDuration={6000}
+        onClose={() => setPaymentSuccessOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setPaymentSuccessOpen(false)}>
+          Payment successful — your balance has been updated.
+        </Alert>
+      </Snackbar>
+
       {/* Column 1: Chat */}
       <Box sx={{
         width: `${splitPercent}%`,
@@ -471,6 +513,7 @@ function MainChat() {
         overflow: 'hidden'
       }}>
         <PollingProgressBar pollCount={pollCount} maxPolls={maxPolls} loading={queryStatus === 'Working'} />
+        {lowBalance && <LowBalanceBanner />}
         <ChatWindow
           messages={messages}
           onSend={handleSend}
@@ -482,6 +525,7 @@ function MainChat() {
           sessionId={sessionId}
           isAuthenticated={isAuthenticated}
           isImpersonating={isImpersonating}
+          lowBalance={lowBalance}
         />
       </Box>
 
@@ -558,6 +602,7 @@ function App() {
 
   const [mode, setMode] = useState(() => localStorage.getItem('colorMode') ?? 'dark');
   const theme = useMemo(() => createAppTheme(mode), [mode]);
+  const [balance, setBalance] = useState(null);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [impersonation, setImpersonationState] = useState(() => {
@@ -611,13 +656,13 @@ function App() {
             <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
               <Routes>
                 <Route path="/about" element={<About />} />
-                <Route path="/billing" element={<Billing />} />
+                <Route path="/billing" element={<Billing balance={balance} onBalanceUpdate={setBalance} />} />
                 <Route path="/help" element={<Help />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/plans" element={<Plans />} />
                 <Route path="/sessions" element={<Sessions />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="*" element={<MainChat />} />
+                <Route path="*" element={<MainChat onBalanceUpdate={setBalance} />} />
               </Routes>
             </Box>
             <Box sx={{
