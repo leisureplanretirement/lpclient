@@ -10,6 +10,9 @@ const AccountCanceled = () => {
       <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 480 }}>
         Your account has been canceled. Please contact support if you'd like to reactivate your account.
       </Typography>
+      <Typography variant="body2" color="text.secondary">
+        <a href="mailto:leisureplansupport@gmail.com">leisureplansupport@gmail.com</a>
+      </Typography>
       <Button
         variant="outlined"
         onClick={() => logout({ logoutParams: { returnTo: window.location.origin + import.meta.env.BASE_URL } })}

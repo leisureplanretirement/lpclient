@@ -41,12 +41,16 @@ const About = () => {
       <Divider sx={{ my: 3 }} />
 
       <Typography variant="h6" sx={{ mb: 1 }}>Contact & Feedback</Typography>
-      <Typography variant="body2">
+      <Typography variant="body2" sx={{ mb: 1 }}>
         To report issues or submit feedback, please visit our{' '}
         <Link href="https://github.com/leisureplanretirement/lpclient/issues" target="_blank" rel="noopener noreferrer">
           GitHub Issues
         </Link>{' '}
         page.
+      </Typography>
+      <Typography variant="body2">
+        For support, contact us at{' '}
+        <Link href="mailto:leisureplansupport@gmail.com">leisureplansupport@gmail.com</Link>.
       </Typography>
     </Box>
   );
