@@ -598,7 +598,7 @@ function MainChat({ onBalanceUpdate }) {
 
 function App() {
   console.debug('[App] launched');
-  const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
 
   const [mode, setMode] = useState(() => localStorage.getItem('colorMode') ?? 'dark');
   const theme = useMemo(() => createAppTheme(mode), [mode]);
@@ -641,7 +641,7 @@ function App() {
   const impersonationContext = useMemo(() => ({
     isAdmin,
     impersonationEnabled: impersonation.enabled,
-    isImpersonating: impersonation.enabled && !!impersonation.subject.trim(),
+    isImpersonating: impersonation.enabled && !!impersonation.subject.trim() && impersonation.subject.trim() !== user?.sub,
     impersonateSubject: impersonation.subject,
     setImpersonation,
   }), [isAdmin, impersonation, setImpersonation]);

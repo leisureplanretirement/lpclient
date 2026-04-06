@@ -5,6 +5,18 @@ import { useColorMode } from '../ColorModeContext';
 import { useImpersonation } from '../ImpersonationContext';
 import { getDiscountCodes, putDiscountCodes } from '../api';
 
+async function subToGuid(sub) {
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sub));
+  const b = new Uint8Array(hash);
+  const h = x => x.toString(16).padStart(2, '0');
+  const d1 = [b[3],b[2],b[1],b[0]].map(h).join('');
+  const d2 = [b[5],b[4]].map(h).join('');
+  const d3 = [b[7],b[6]].map(h).join('');
+  const d4 = Array.from(b.slice(8,10)).map(h).join('');
+  const d5 = Array.from(b.slice(10,16)).map(h).join('');
+  return `${d1}-${d2}-${d3}-${d4}-${d5}`;
+}
+
 const Settings = () => {
   const { mode, setMode } = useColorMode();
   const { isAdmin, impersonationEnabled, isImpersonating, impersonateSubject, setImpersonation } = useImpersonation();
@@ -14,21 +26,16 @@ const Settings = () => {
 
   useEffect(() => {
     if (!rawSub) { setDisplayedUserId(null); return; }
-    const compute = async () => {
-      const bytes = new TextEncoder().encode(rawSub);
-      const hash = await crypto.subtle.digest('SHA-256', bytes);
-      const b = new Uint8Array(hash);
-      // .NET Guid(byte[]) uses little-endian for first 3 components
-      const h = x => x.toString(16).padStart(2, '0');
-      const d1 = [b[3],b[2],b[1],b[0]].map(h).join('');
-      const d2 = [b[5],b[4]].map(h).join('');
-      const d3 = [b[7],b[6]].map(h).join('');
-      const d4 = Array.from(b.slice(8,10)).map(h).join('');
-      const d5 = Array.from(b.slice(10,16)).map(h).join('');
-      setDisplayedUserId(`${d1}-${d2}-${d3}-${d4}-${d5}`);
-    };
-    compute();
+    subToGuid(rawSub).then(setDisplayedUserId);
   }, [rawSub]);
+
+  const [lookupSub, setLookupSub] = useState('');
+  const [lookupGuid, setLookupGuid] = useState(null);
+
+  useEffect(() => {
+    if (!lookupSub.trim()) { setLookupGuid(null); return; }
+    subToGuid(lookupSub.trim()).then(setLookupGuid);
+  }, [lookupSub]);
   const [codesInput, setCodesInput] = useState('');
   const [codesLoading, setCodesLoading] = useState(false);
   const [codesSaving, setCodesSaving] = useState(false);
@@ -123,6 +130,9 @@ const Settings = () => {
             onChange={e => setImpersonation({ subject: e.target.value })}
             sx={{ mt: 2 }}
           />
+          {impersonateSubject.trim() && impersonateSubject.trim() === user?.sub && (
+            <Alert severity="warning" sx={{ mt: 1 }}>You cannot impersonate yourself.</Alert>
+          )}
 
           <Divider sx={{ my: 3 }} />
           <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
@@ -157,6 +167,24 @@ const Settings = () => {
                 <Alert severity="error" sx={{ mt: 1 }}>{codesSaveError}</Alert>
               )}
             </>
+          )}
+
+          <Divider sx={{ my: 3 }} />
+          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+            User ID Lookup
+          </Typography>
+          <TextField
+            fullWidth
+            size="small"
+            label="Auth0 subject"
+            placeholder="auth0|64f3a1b2c9d8e7f0a1b2c3d4"
+            value={lookupSub}
+            onChange={e => setLookupSub(e.target.value)}
+          />
+          {lookupGuid && (
+            <Typography variant="body2" sx={{ mt: 1, fontFamily: 'monospace' }}>
+              {lookupGuid}
+            </Typography>
           )}
         </>
       )}
