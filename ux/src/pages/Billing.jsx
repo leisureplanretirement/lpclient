@@ -23,9 +23,6 @@ import { useNavigate } from 'react-router-dom';
 import AddFundsFlow from '../components/AddFundsFlow';
 import { fetchBillingRecords, fetchSession, getBillingBalance, getDiscountCodes } from '../api';
 
-// Key whose value is hoisted above the table (same for every row)
-const USER_ID_KEY = 'userId';
-
 // UUID fields: show only the first segment (before the first '-'), tooltip shows full value
 const UUID_SHORT_KEYS = new Set(['sessionId', 'queryId']);
 
@@ -173,16 +170,6 @@ const Billing = ({ balance, onBalanceUpdate }) => {
     load();
   }, [isLoading, isAuthenticated, getAccessTokenSilently, fromDate, toDate]);
 
-  const userId = records.length > 0 ? records[0][USER_ID_KEY] : null;
-
-  const totalDiscountedCost = useMemo(() => {
-    if (records.length === 0) return null;
-    const key = Object.keys(records[0]).find(k => k.toLowerCase().includes('discount'));
-    if (!key) return null;
-    const total = records.reduce((sum, r) => sum + (typeof r[key] === 'number' ? r[key] : 0), 0);
-    return total;
-  }, [records]);
-
   const handleLoadSession = async (sessionId) => {
     try {
       const token = await getAccessTokenSilently();
@@ -195,7 +182,7 @@ const Billing = ({ balance, onBalanceUpdate }) => {
 
   const columns = useMemo(() => {
     if (records.length === 0) return [];
-    return Object.keys(records[0]).filter(k => k !== USER_ID_KEY);
+    return Object.keys(records[0]).filter(k => k !== 'userId');
   }, [records]);
 
   const handleSort = (field) => {
@@ -275,20 +262,7 @@ const Billing = ({ balance, onBalanceUpdate }) => {
         )}
       </Box>
 
-      {(userId || totalDiscountedCost !== null) && (
-        <Box sx={{ display: 'flex', gap: 4, mb: 2, flexWrap: 'wrap' }}>
-          {userId && (
-            <Typography variant="body2" color="text.secondary">
-              <strong>User ID:</strong> {userId}
-            </Typography>
-          )}
-          {totalDiscountedCost !== null && (
-            <Typography variant="body2" color="text.secondary">
-              <strong>Total Discounted Cost:</strong> ${totalDiscountedCost.toFixed(4)}
-            </Typography>
-          )}
-        </Box>
-      )}
+      <Typography variant="h6" sx={{ mb: 2 }}>Usage</Typography>
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
