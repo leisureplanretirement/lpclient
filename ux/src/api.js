@@ -263,6 +263,28 @@ export async function fetchBillingRecords(token, from, to) {
   return JSON.parse(text);
 }
 
+// GET /api/billing/DiscountCodes
+export async function getDiscountCodes(token) {
+  const res = await fetch(`${API_BASE}/billing/DiscountCodes`, {
+    headers: buildHeaders(token)
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error('Failed to load discount codes');
+  return JSON.parse(text);
+}
+
+// PUT /api/billing/DiscountCodes
+export async function putDiscountCodes(codes, token) {
+  const res = await fetch(`${API_BASE}/billing/DiscountCodes`, {
+    method: 'PUT',
+    headers: buildHeaders(token),
+    body: JSON.stringify({ codes }),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error('Failed to save discount codes');
+  return JSON.parse(text);
+}
+
 // GET /api/billing/Balance
 export async function getBillingBalance(token) {
   const res = await fetch(`${API_BASE}/billing/Balance`, {

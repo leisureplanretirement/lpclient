@@ -21,7 +21,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AddFundsFlow from '../components/AddFundsFlow';
-import { fetchBillingRecords, fetchSession, getBillingBalance } from '../api';
+import { fetchBillingRecords, fetchSession, getBillingBalance, getDiscountCodes } from '../api';
 
 // Key whose value is hoisted above the table (same for every row)
 const USER_ID_KEY = 'userId';
@@ -121,6 +121,7 @@ const Billing = ({ balance, onBalanceUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
+  const [discountCodes, setDiscountCodes] = useState([]);
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
     d.setMonth(d.getMonth() - 1);
@@ -139,6 +140,8 @@ const Billing = ({ balance, onBalanceUpdate }) => {
         const token = await getAccessTokenSilently();
         const { balanceUsd } = await getBillingBalance(token);
         onBalanceUpdate(balanceUsd);
+        const { codes } = await getDiscountCodes(token);
+        setDiscountCodes(codes ?? []);
       } catch {}
 
       const params = new URLSearchParams(window.location.search);
@@ -265,6 +268,11 @@ const Billing = ({ balance, onBalanceUpdate }) => {
           Current balance{balance !== null && balance < 0.05 ? ' — low, please add funds' : ''}
         </Typography>
         <AddFundsFlow />
+        {discountCodes.length > 0 && (
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            <strong>Active discounts:</strong> {discountCodes.join(', ')}
+          </Typography>
+        )}
       </Box>
 
       {(userId || totalDiscountedCost !== null) && (
