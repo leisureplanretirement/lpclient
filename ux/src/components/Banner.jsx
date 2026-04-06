@@ -4,7 +4,7 @@ import { AppBar, Avatar, Box, Button, Divider, IconButton, Menu, MenuItem, Toolb
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Banner = () => {
+const Banner = ({ canceled = false }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [userAnchorEl, setUserAnchorEl] = useState(null);
   const navigate = useNavigate();
@@ -42,27 +42,31 @@ const Banner = () => {
       flexShrink: 0,
     }}>
       <Toolbar sx={{ width: '100%' }}>
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          onClick={handleMenuOpen}
-          sx={{ mr: 2 }}
-        >
-          <MenuIcon />
-        </IconButton>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-        >
-          <MenuItem onClick={() => handleNavigate('/', { state: { newChat: Date.now() } })}>New Chat</MenuItem>
-          <MenuItem onClick={() => handleNavigate('/sessions')}>Sessions</MenuItem>
-          <MenuItem onClick={() => handleNavigate('/billing')}>Billing</MenuItem>
-          <MenuItem onClick={() => handleNavigate('/settings')}>Settings</MenuItem>
-          <MenuItem onClick={() => handleNavigate('/help')}>Help</MenuItem>
-          <MenuItem onClick={() => handleNavigate('/about')}>About</MenuItem>
-        </Menu>
+        {!canceled && (
+          <>
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              onClick={handleMenuOpen}
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={() => handleNavigate('/', { state: { newChat: Date.now() } })}>New Chat</MenuItem>
+              <MenuItem onClick={() => handleNavigate('/sessions')}>Sessions</MenuItem>
+              <MenuItem onClick={() => handleNavigate('/billing')}>Billing</MenuItem>
+              <MenuItem onClick={() => handleNavigate('/settings')}>Settings</MenuItem>
+              <MenuItem onClick={() => handleNavigate('/help')}>Help</MenuItem>
+              <MenuItem onClick={() => handleNavigate('/about')}>About</MenuItem>
+            </Menu>
+          </>
+        )}
         <Box sx={{ flexGrow: 1 }}>
           <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: '#fff' }}>
             LeisurePlan.App

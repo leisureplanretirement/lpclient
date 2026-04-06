@@ -1,9 +1,9 @@
-import { Alert, Box, Button, CircularProgress, Divider, FormControlLabel, Switch, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControlLabel, Switch, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useColorMode } from '../ColorModeContext';
 import { useImpersonation } from '../ImpersonationContext';
-import { getDiscountCodes, putDiscountCodes } from '../api';
+import { cancelAccount, getDiscountCodes, putDiscountCodes } from '../api';
 
 async function subToGuid(sub) {
   const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sub));
@@ -20,7 +20,7 @@ async function subToGuid(sub) {
 const Settings = () => {
   const { mode, setMode } = useColorMode();
   const { isAdmin, impersonationEnabled, isImpersonating, impersonateSubject, setImpersonation } = useImpersonation();
-  const { getAccessTokenSilently, user } = useAuth0();
+  const { getAccessTokenSilently, logout, user } = useAuth0();
   const rawSub = isImpersonating ? impersonateSubject : (user?.sub ?? null);
   const [displayedUserId, setDisplayedUserId] = useState(null);
 
@@ -71,6 +71,23 @@ const Settings = () => {
     }
     setCodesSaving(false);
   };
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+
+  const handleCancelAccount = async () => {
+    setCanceling(true);
+    setCancelError(null);
+    try {
+      const token = await getAccessTokenSilently();
+      await cancelAccount(token);
+      logout({ logoutParams: { returnTo: window.location.origin + import.meta.env.BASE_URL } });
+    } catch (e) {
+      setCancelError(e.message);
+      setCanceling(false);
+    }
+  };
+
   const isDarkMode = mode === 'dark';
 
   return (
@@ -97,6 +114,31 @@ const Settings = () => {
           </Typography>
         </Box>
       )}
+
+      <Divider sx={{ my: 3 }} />
+      <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>Cancel Account</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Permanently cancels your account. This cannot be undone. Contact support to reactivate.
+      </Typography>
+      <Button variant="outlined" color="error" onClick={() => setCancelDialogOpen(true)}>
+        Cancel Account
+      </Button>
+      {cancelError && <Alert severity="error" sx={{ mt: 1 }}>{cancelError}</Alert>}
+
+      <Dialog open={cancelDialogOpen} onClose={() => !canceling && setCancelDialogOpen(false)}>
+        <DialogTitle>Cancel your account?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will permanently cancel your account. You will be logged out immediately and will need to contact support to reactivate.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCancelDialogOpen(false)} disabled={canceling}>Keep Account</Button>
+          <Button onClick={handleCancelAccount} color="error" disabled={canceling}>
+            {canceling ? 'Canceling…' : 'Yes, Cancel My Account'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {isAdmin && (
         <>

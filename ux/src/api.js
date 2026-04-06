@@ -19,6 +19,28 @@ export class InsufficientBalanceError extends Error {
   }
 }
 
+// Custom error for 403 with userStatus: Canceled
+export class CanceledAccountError extends Error {
+  constructor() {
+    super('Account canceled');
+    this.name = 'CanceledAccountError';
+  }
+}
+
+// Shared error handler for non-ok text responses
+function throwOnError(res, text) {
+  if (res.status === 403) throw new CanceledAccountError();
+  let body;
+  try { body = JSON.parse(text); } catch { body = {}; }
+  if (res.status === 402) throw new InsufficientBalanceError(body.balanceUsd ?? null, body.message);
+  if (res.status === 500) {
+    const firstLine = text.split('\n')[0];
+    const details = text.includes('\n') ? text : null;
+    throw new ApiError(firstLine, details);
+  }
+  throw new Error(text);
+}
+
 // Helper to build headers with optional auth token and impersonation
 function buildHeaders(token, includeImpersonation = true) {
   const headers = { 'Content-Type': 'application/json' };
@@ -49,19 +71,7 @@ export async function sendMessage(message, sessionId, token) {
     body: JSON.stringify(payload),
   });
   const text = await res.text();
-  if (!res.ok) {
-    if (res.status === 402) {
-      let body;
-      try { body = JSON.parse(text); } catch { body = {}; }
-      throw new InsufficientBalanceError(body.balanceUsd ?? null, body.message);
-    }
-    if (res.status === 500) {
-      const firstLine = text.split('\n')[0];
-      const details = text.includes('\n') ? text : null;
-      throw new ApiError(firstLine, details);
-    }
-    throw new Error(text);
-  }
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -71,7 +81,7 @@ export async function fetchChatHistory(token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load chat history');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -82,7 +92,7 @@ export async function fetchChatDialog(sessionId, token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load chat dialog');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -92,7 +102,7 @@ export async function fetchRetirementInputs(sessionId, queryId, token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load retirement inputs');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -123,7 +133,7 @@ export async function fetchQueryStatus(sessionId, queryId, token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to fetch query status');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -133,7 +143,7 @@ export async function fetchFlowsTable(sessionId, queryId, token) {
     headers: buildHeaders(token)
   });
   const html = await res.text();
-  if (!res.ok) throw new Error('Failed to load flows table');
+  if (!res.ok) throwOnError(res, html);
   return html;
 }
 
@@ -143,7 +153,7 @@ export async function fetchLatestFlowsTable(sessionId, token) {
     headers: buildHeaders(token)
   });
   const html = await res.text();
-  if (!res.ok) throw new Error('Failed to load latest flows table');
+  if (!res.ok) throwOnError(res, html);
   return html;
 }
 
@@ -153,7 +163,7 @@ export async function fetchAnnualTable(sessionId, queryId, token) {
     headers: buildHeaders(token)
   });
   const html = await res.text();
-  if (!res.ok) throw new Error('Failed to load annual table');
+  if (!res.ok) throwOnError(res, html);
   return html;
 }
 
@@ -163,7 +173,7 @@ export async function fetchSummaryTable(sessionId, queryId, token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load summary table');
+  if (!res.ok) throwOnError(res, text);
   return text;
 }
 
@@ -173,7 +183,7 @@ export async function fetchLatestSummaryTable(sessionId, token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load latest summary table');
+  if (!res.ok) throwOnError(res, text);
   return text;
 }
 
@@ -183,7 +193,7 @@ export async function fetchLatestAnnualTable(sessionId, token) {
     headers: buildHeaders(token)
   });
   const html = await res.text();
-  if (!res.ok) throw new Error('Failed to load latest annual table');
+  if (!res.ok) throwOnError(res, html);
   return html;
 }
 
@@ -193,7 +203,7 @@ export async function fetchSubAgentContext(sessionId, queryId, task, token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load sub-agent context');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -203,7 +213,7 @@ export async function fetchSubAgentResponse(sessionId, queryId, task, token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load sub-agent response');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -213,7 +223,10 @@ export async function fetchIsAdministrator(token) {
     headers: buildHeaders(token, false)
   });
   const text = await res.text();
-  if (!res.ok) return false;
+  if (!res.ok) {
+    if (res.status === 403) throw new CanceledAccountError();
+    return false;
+  }
   return text.trim().toLowerCase() === 'true';
 }
 
@@ -223,7 +236,7 @@ export async function fetchSessionList(token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load session list');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -233,7 +246,7 @@ export async function fetchSession(sessionId, token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load session');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -245,7 +258,7 @@ export async function deleteSession(sessionId, token) {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || 'Failed to delete session');
+    throwOnError(res, text);
   }
 }
 
@@ -259,7 +272,18 @@ export async function fetchBillingRecords(token, from, to) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load billing records');
+  if (!res.ok) throwOnError(res, text);
+  return JSON.parse(text);
+}
+
+// POST /api/billing/Cancel
+export async function cancelAccount(token) {
+  const res = await fetch(`${API_BASE}/billing/Cancel`, {
+    method: 'POST',
+    headers: buildHeaders(token),
+  });
+  const text = await res.text();
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -269,7 +293,7 @@ export async function getDiscountCodes(token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load discount codes');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -281,7 +305,7 @@ export async function putDiscountCodes(codes, token) {
     body: JSON.stringify({ codes }),
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to save discount codes');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -291,7 +315,7 @@ export async function getBillingBalance(token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to load billing balance');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -303,7 +327,7 @@ export async function createTopUpSession(priceId, token) {
     body: JSON.stringify({ priceId }),
   });
   const text = await res.text();
-  if (!res.ok) throw new Error('Failed to create top-up session');
+  if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
 }
 
@@ -316,6 +340,6 @@ export async function updateSession(sessionId, name, token) {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || 'Failed to update session');
+    throwOnError(res, text);
   }
 }

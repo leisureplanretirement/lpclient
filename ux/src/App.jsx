@@ -8,6 +8,7 @@ import { Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from
 import { Snackbar, Alert } from '@mui/material';
 import {
   ApiError,
+  CanceledAccountError,
   InsufficientBalanceError,
   fetchAnnualTable,
   fetchChart,
@@ -30,6 +31,7 @@ import LowBalanceBanner from './components/LowBalanceBanner';
 import PollingProgressBar from './components/PollingProgressBar';
 import ResultsWindow from './components/ResultsWindow';
 import About from './pages/About';
+import AccountCanceled from './pages/AccountCanceled';
 import Admin from './pages/Admin';
 import Billing from './pages/Billing';
 import Help from './pages/Help';
@@ -79,7 +81,15 @@ function formatEntries(obj) {
   });
 }
 
-function MainChat({ onBalanceUpdate }) {
+function CanceledRedirect({ canceled }) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (canceled) navigate('/canceled', { replace: true });
+  }, [canceled]);
+  return null;
+}
+
+function MainChat({ onBalanceUpdate, onCanceled }) {
   const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
@@ -256,7 +266,9 @@ function MainChat({ onBalanceUpdate }) {
       setMessages((msgs) => [...msgs, { sender: 'agent', text: res.reply || 'Message sent. Waiting for results...', queryId: res.chatQueryId }]);
       pollQueryStatus(res.chatSessionId, res.chatQueryId);
     } catch (e) {
-      if (e instanceof InsufficientBalanceError) {
+      if (e instanceof CanceledAccountError) {
+        onCanceled();
+      } else if (e instanceof InsufficientBalanceError) {
         setLowBalance(true);
         if (e.balanceUsd !== null && e.balanceUsd !== undefined) onBalanceUpdate(e.balanceUsd);
       } else if (e instanceof ApiError && e.details) {
@@ -303,6 +315,7 @@ function MainChat({ onBalanceUpdate }) {
           setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Query timed out, try again.' }]);
         }
       } catch (e) {
+        if (e instanceof CanceledAccountError) { onCanceled(); return; }
         if (currentPoll < maxPolls) setTimeout(poll, 1000);
       }
     };
@@ -603,6 +616,7 @@ function App() {
   const [mode, setMode] = useState(() => localStorage.getItem('colorMode') ?? 'dark');
   const theme = useMemo(() => createAppTheme(mode), [mode]);
   const [balance, setBalance] = useState(null);
+  const [canceled, setCanceled] = useState(false);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [impersonation, setImpersonationState] = useState(() => {
@@ -616,7 +630,12 @@ function App() {
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       getAccessTokenSilently().then(token => {
-        fetchIsAdministrator(token).then(setIsAdmin).catch(() => setIsAdmin(false));
+        fetchIsAdministrator(token)
+          .then(setIsAdmin)
+          .catch(e => {
+            if (e instanceof CanceledAccountError) setCanceled(true);
+            else setIsAdmin(false);
+          });
       });
     }
     if (!isLoading && !isAuthenticated) setIsAdmin(false);
@@ -652,10 +671,12 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
+          <CanceledRedirect canceled={canceled} />
           <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-            <Banner />
+            <Banner canceled={canceled} />
             <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
               <Routes>
+                <Route path="/canceled" element={<AccountCanceled />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/billing" element={<Billing balance={balance} onBalanceUpdate={setBalance} />} />
                 <Route path="/help" element={<Help />} />
@@ -663,7 +684,7 @@ function App() {
                 <Route path="/plans" element={<Plans />} />
                 <Route path="/sessions" element={<Sessions />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="*" element={<MainChat onBalanceUpdate={setBalance} />} />
+                <Route path="*" element={<MainChat onBalanceUpdate={setBalance} onCanceled={() => setCanceled(true)} />} />
               </Routes>
             </Box>
             <Box sx={{
