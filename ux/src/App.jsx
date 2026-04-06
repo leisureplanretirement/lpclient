@@ -640,6 +640,7 @@ function App() {
 
   const impersonationContext = useMemo(() => ({
     isAdmin,
+    impersonationEnabled: impersonation.enabled,
     isImpersonating: impersonation.enabled && !!impersonation.subject.trim(),
     impersonateSubject: impersonation.subject,
     setImpersonation,

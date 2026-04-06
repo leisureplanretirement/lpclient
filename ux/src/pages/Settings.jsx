@@ -7,8 +7,28 @@ import { getDiscountCodes, putDiscountCodes } from '../api';
 
 const Settings = () => {
   const { mode, setMode } = useColorMode();
-  const { isAdmin, isImpersonating, impersonateSubject, setImpersonation } = useImpersonation();
-  const { getAccessTokenSilently } = useAuth0();
+  const { isAdmin, impersonationEnabled, isImpersonating, impersonateSubject, setImpersonation } = useImpersonation();
+  const { getAccessTokenSilently, user } = useAuth0();
+  const rawSub = isImpersonating ? impersonateSubject : (user?.sub ?? null);
+  const [displayedUserId, setDisplayedUserId] = useState(null);
+
+  useEffect(() => {
+    if (!rawSub) { setDisplayedUserId(null); return; }
+    const compute = async () => {
+      const bytes = new TextEncoder().encode(rawSub);
+      const hash = await crypto.subtle.digest('SHA-256', bytes);
+      const b = new Uint8Array(hash);
+      // .NET Guid(byte[]) uses little-endian for first 3 components
+      const h = x => x.toString(16).padStart(2, '0');
+      const d1 = [b[3],b[2],b[1],b[0]].map(h).join('');
+      const d2 = [b[5],b[4]].map(h).join('');
+      const d3 = [b[7],b[6]].map(h).join('');
+      const d4 = Array.from(b.slice(8,10)).map(h).join('');
+      const d5 = Array.from(b.slice(10,16)).map(h).join('');
+      setDisplayedUserId(`${d1}-${d2}-${d3}-${d4}-${d5}`);
+    };
+    compute();
+  }, [rawSub]);
   const [codesInput, setCodesInput] = useState('');
   const [codesLoading, setCodesLoading] = useState(false);
   const [codesSaving, setCodesSaving] = useState(false);
@@ -60,6 +80,17 @@ const Settings = () => {
         label={isDarkMode ? 'Dark Mode' : 'Light Mode'}
       />
 
+      {isAdmin && displayedUserId && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            {isImpersonating ? 'Impersonated user' : 'User'} ID
+          </Typography>
+          <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+            {displayedUserId}
+          </Typography>
+        </Box>
+      )}
+
       {isAdmin && (
         <>
           <Divider sx={{ my: 3 }} />
@@ -76,7 +107,7 @@ const Settings = () => {
           <FormControlLabel
             control={
               <Switch
-                checked={isImpersonating}
+                checked={impersonationEnabled}
                 onChange={e => setImpersonation({ enabled: e.target.checked })}
               />
             }
