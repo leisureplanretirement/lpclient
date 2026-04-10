@@ -5,7 +5,12 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import {
   Alert,
   Box,
+  Button,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Paper,
   Snackbar,
   Table,
@@ -112,7 +117,8 @@ function SortIcon({ dir }) {
 }
 
 const Billing = ({ balance, onBalanceUpdate }) => {
-  const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -343,6 +349,35 @@ const Billing = ({ balance, onBalanceUpdate }) => {
           </TableContainer>
         </>
       )}
+
+      <Box sx={{ mt: 4 }}>
+        <Button variant="outlined" color="warning" onClick={() => setRefundDialogOpen(true)}>
+          Request Refund
+        </Button>
+      </Box>
+
+      <Dialog open={refundDialogOpen} onClose={() => setRefundDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Request a Refund</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Refund requests are not yet automated. To request a refund, please send an email to our support team and we will process it manually.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Clicking the button below will open your email client with a pre-filled message. Please describe your refund request in the email body.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRefundDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            component="a"
+            href={`mailto:Leisureplansupport@gmail.com?subject=${encodeURIComponent(`Refund Requested - ${user?.sub ?? ''} - ${user?.name ?? user?.email ?? ''}`)}`}
+            onClick={() => setRefundDialogOpen(false)}
+          >
+            Send Email to Support
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
