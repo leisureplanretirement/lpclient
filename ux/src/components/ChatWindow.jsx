@@ -48,13 +48,33 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
-const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance }) => {
+const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory }) => {
   const theme = useTheme();
   const [inputValue, setInputValue] = useState('');
-  const [lastUserMessageIndex, setLastUserMessageIndex] = useState(-1);
+  const [queryHistory, setQueryHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [savedInput, setSavedInput] = useState('');
   const topRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const prevMessageCountRef = useRef(0);
+
+  // Reset history when a new chat session starts (sessionId goes to null)
+  useEffect(() => {
+    if (sessionId === null) {
+      setQueryHistory([]);
+      setHistoryIndex(-1);
+      setSavedInput('');
+    }
+  }, [sessionId]);
+
+  // Seed history when a session is loaded from the Sessions page
+  useEffect(() => {
+    if (loadedQueryHistory && loadedQueryHistory.length > 0) {
+      setQueryHistory(loadedQueryHistory);
+      setHistoryIndex(-1);
+      setSavedInput('');
+    }
+  }, [loadedQueryHistory]);
 
   // Scroll to bottom when NEW messages are added
   useEffect(() => {
@@ -78,8 +98,39 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
   const handleSend = (e) => {
     e.preventDefault();
     if (inputValue.trim()) {
+      setQueryHistory(prev => [...prev, inputValue]);
+      setHistoryIndex(-1);
+      setSavedInput('');
       onSend(inputValue);
       setInputValue('');
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    // Only intercept when there are no newlines (don't interfere with multiline editing)
+    if (e.key === 'ArrowUp' && !inputValue.includes('\n')) {
+      if (queryHistory.length === 0) return;
+      e.preventDefault();
+      if (historyIndex === -1) {
+        setSavedInput(inputValue);
+        const newIndex = queryHistory.length - 1;
+        setHistoryIndex(newIndex);
+        setInputValue(queryHistory[newIndex]);
+      } else if (historyIndex > 0) {
+        const newIndex = historyIndex - 1;
+        setHistoryIndex(newIndex);
+        setInputValue(queryHistory[newIndex]);
+      }
+    } else if (e.key === 'ArrowDown' && historyIndex !== -1) {
+      e.preventDefault();
+      if (historyIndex < queryHistory.length - 1) {
+        const newIndex = historyIndex + 1;
+        setHistoryIndex(newIndex);
+        setInputValue(queryHistory[newIndex]);
+      } else {
+        setHistoryIndex(-1);
+        setInputValue(savedInput);
+      }
     }
   };
 
@@ -222,6 +273,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             placeholder={isAuthenticated ? "Type your message..." : "Please login."}
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
             disabled={loading || !isAuthenticated || isImpersonating || lowBalance}
             multiline
             maxRows={4}

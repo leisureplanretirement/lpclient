@@ -114,6 +114,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const hasLoadedSessionRef = useRef(false);
   const [lowBalance, setLowBalance] = useState(false);
   const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
+  const [loadedQueryHistory, setLoadedQueryHistory] = useState([]);
 
   // Helper function to get appropriate welcome message based on auth state
   const getWelcomeMessage = (isAuth) => {
@@ -201,6 +202,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
           // Normalize API response to match UI expectations
           const normalizedMessages = normalizeDialogMessages(dialogMessages);
           setMessages(normalizedMessages);
+          setLoadedQueryHistory(normalizedMessages.filter(m => m.sender === 'user').map(m => m.text));
         } catch (e) {
           setMessages([
             { sender: 'agent', text: getWelcomeMessage(true) },
@@ -247,6 +249,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       setQueryStatus(null);
       hasLoadedSessionRef.current = false;
       isNewQueryRef.current = false;
+      setLoadedQueryHistory([]);
       // Clear the navigation state so refresh doesn't re-trigger
       navigate('/', { replace: true });
     }
@@ -539,6 +542,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
           isAuthenticated={isAuthenticated}
           isImpersonating={isImpersonating}
           lowBalance={lowBalance}
+          loadedQueryHistory={loadedQueryHistory}
         />
       </Box>
 
