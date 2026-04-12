@@ -48,7 +48,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
-const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory }) => {
+const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed }) => {
   const theme = useTheme();
   const [inputValue, setInputValue] = useState('');
   const [queryHistory, setQueryHistory] = useState([]);
@@ -56,6 +56,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
   const [savedInput, setSavedInput] = useState('');
   const topRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const inputRef = useRef(null);
   const prevMessageCountRef = useRef(0);
 
   // Reset history when a new chat session starts (sessionId goes to null)
@@ -75,6 +76,17 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
       setSavedInput('');
     }
   }, [loadedQueryHistory]);
+
+  // Prefill input from pencil-icon click and focus the chat box
+  useEffect(() => {
+    if (prefillText) {
+      setInputValue(prev => prev.trim() ? `${prev}. ${prefillText}` : prefillText);
+      setHistoryIndex(-1);
+      setSavedInput('');
+      inputRef.current?.focus();
+      onPrefillConsumed && onPrefillConsumed();
+    }
+  }, [prefillText]);
 
   // Scroll to bottom when NEW messages are added
   useEffect(() => {
@@ -277,6 +289,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             disabled={loading || !isAuthenticated || isImpersonating || lowBalance}
             multiline
             maxRows={4}
+            inputRef={inputRef}
           />
           <Button
             type="submit"

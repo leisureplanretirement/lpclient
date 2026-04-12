@@ -115,6 +115,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const [lowBalance, setLowBalance] = useState(false);
   const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
   const [loadedQueryHistory, setLoadedQueryHistory] = useState([]);
+  const [chatPrefill, setChatPrefill] = useState('');
 
   // Helper function to get appropriate welcome message based on auth state
   const getWelcomeMessage = (isAuth) => {
@@ -543,6 +544,8 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
           isImpersonating={isImpersonating}
           lowBalance={lowBalance}
           loadedQueryHistory={loadedQueryHistory}
+          prefillText={chatPrefill}
+          onPrefillConsumed={() => setChatPrefill('')}
         />
       </Box>
 
@@ -566,6 +569,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         backgroundColor: 'background.default'
       }}>
         <ResultsWindow
+          onEditField={(label, value) => setChatPrefill(`${label} = ${value}`)}
           images={[
             flowsUrl ? { src: flowsUrl, alt: 'Flows Chart', detailsLink: sessionId && selectedQueryId ? `/api/Chat/FlowsTable?sessionId=${sessionId}&queryId=${selectedQueryId}` : null, thumbnail: '/MonthlyCashFlowAnalysis.png' } : null,
             balancesUrl ? { src: balancesUrl, alt: 'Balances Chart', annualDetailsLink: sessionId && selectedQueryId ? true : false, thumbnail: '/AnnualCashFlowAnalysis.png' } : null,

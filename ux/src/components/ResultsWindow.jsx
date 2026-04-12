@@ -1,11 +1,12 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { Box, IconButton, Paper, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useState } from 'react';
 
-const ResultsWindow = ({ images, tables, summaryHtml, queryId, sessionId, onDetailsClick, onAnnualDetailsClick, isAdmin, onAdminClick }) => {
+const ResultsWindow = ({ images, tables, summaryHtml, queryId, sessionId, onDetailsClick, onAnnualDetailsClick, isAdmin, onAdminClick, onEditField }) => {
   const theme = useTheme();
   const [inputsExpanded, setInputsExpanded] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(true);
@@ -81,6 +82,12 @@ const ResultsWindow = ({ images, tables, summaryHtml, queryId, sessionId, onDeta
                           {h}
                         </th>
                       ))}
+                      <th style={{
+                        borderBottom: `2px solid ${theme.palette.secondary.main}`,
+                        padding: 4,
+                        backgroundColor: theme.palette.action.hover,
+                        width: 28,
+                      }} />
                     </tr>
                   </thead>
                   <tbody>
@@ -102,6 +109,18 @@ const ResultsWindow = ({ images, tables, summaryHtml, queryId, sessionId, onDeta
                             {cell}
                           </td>
                         ))}
+                        <td style={{ padding: '0 2px', textAlign: 'center', width: 28 }}>
+                          <EditOutlinedIcon
+                            onClick={() => onEditField && onEditField(row[0], row[1])}
+                            sx={{
+                              fontSize: '0.875rem',
+                              color: 'text.disabled',
+                              verticalAlign: 'middle',
+                              cursor: 'pointer',
+                              '&:hover': { color: 'primary.main' },
+                            }}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
