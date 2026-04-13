@@ -639,7 +639,10 @@ function App() {
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       getAccessTokenSilently().then(token => {
-        postUserLogin(token).catch(() => {});
+        if (!sessionStorage.getItem('lp_login_called')) {
+          sessionStorage.setItem('lp_login_called', '1');
+          postUserLogin(token).catch(() => {});
+        }
         fetchIsAdministrator(token)
           .then(setIsAdmin)
           .catch(e => {
@@ -648,7 +651,10 @@ function App() {
           });
       });
     }
-    if (!isLoading && !isAuthenticated) setIsAdmin(false);
+    if (!isLoading && !isAuthenticated) {
+      setIsAdmin(false);
+      sessionStorage.removeItem('lp_login_called');
+    }
   }, [isLoading, isAuthenticated]);
 
   const setImpersonation = useCallback((updates) => {
