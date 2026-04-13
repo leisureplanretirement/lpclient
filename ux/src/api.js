@@ -218,6 +218,18 @@ export async function fetchSubAgentResponse(sessionId, queryId, task, token) {
 }
 
 // GET /api/Chat/IsAdministrator
+export async function postUserLogin(token) {
+  const res = await fetch(`${API_BASE}/User/Login`, {
+    method: 'POST',
+    headers: buildHeaders(token, false),
+  });
+  if (!res.ok) {
+    if (res.status === 403) throw new CanceledAccountError();
+    return null;
+  }
+  return res.json();
+}
+
 export async function fetchIsAdministrator(token) {
   const res = await fetch(`${API_BASE}/Chat/IsAdministrator`, {
     headers: buildHeaders(token, false)

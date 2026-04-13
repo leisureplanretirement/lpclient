@@ -16,6 +16,7 @@ import {
   fetchFlowsTable,
   fetchIsAdministrator,
   fetchLatestAnnualTable,
+  postUserLogin,
   fetchLatestChart,
   fetchLatestFlowsTable,
   fetchLatestSummaryTable,
@@ -638,6 +639,7 @@ function App() {
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       getAccessTokenSilently().then(token => {
+        postUserLogin(token).catch(() => {});
         fetchIsAdministrator(token)
           .then(setIsAdmin)
           .catch(e => {
