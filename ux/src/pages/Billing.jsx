@@ -6,11 +6,13 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Paper,
   Snackbar,
   Table,
@@ -27,6 +29,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AddFundsFlow from '../components/AddFundsFlow';
 import { fetchBillingRecords, fetchSession, getBillingBalance, getDiscountCodes } from '../api';
+import { useImpersonation } from '../ImpersonationContext';
 
 // UUID fields: show only the first segment (before the first '-'), tooltip shows full value
 const UUID_SHORT_KEYS = new Set(['sessionId', 'queryId']);
@@ -52,7 +55,7 @@ function formatValue(key, value) {
     return `$${value.toFixed(2)}`;
   }
   if ((lk.includes('amount') || lk.includes('cost') || lk.includes('total') || lk.includes('price')) && typeof value === 'number') {
-    return `$${value.toFixed(4)}`;
+    return `$${value.toFixed(2)}`;
   }
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   return String(value);
@@ -72,7 +75,7 @@ function ShortUuid({ value, onClick }) {
   );
 }
 
-function CellContent({ col, value, onSessionClick }) {
+function CellContent({ col, value, onSessionClick, hideTokens }) {
   // Render deduction object: show session id, query id, token counts
   if (col === 'deduction') {
     if (!value) return <>—</>;
@@ -86,7 +89,7 @@ function CellContent({ col, value, onSessionClick }) {
         {value.queryId && (
           <Box><span>qry: </span><ShortUuid value={value.queryId} /></Box>
         )}
-        {value.inputTokens != null && (
+        {!hideTokens && value.inputTokens != null && (
           <Box>in: {value.inputTokens.toLocaleString()} / out: {value.outputTokens?.toLocaleString() ?? '—'}</Box>
         )}
       </Box>
@@ -118,7 +121,9 @@ function SortIcon({ dir }) {
 
 const Billing = ({ balance, onBalanceUpdate }) => {
   const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
+  const { isAdmin } = useImpersonation();
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [showTokens, setShowTokens] = useState(false);
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -188,8 +193,13 @@ const Billing = ({ balance, onBalanceUpdate }) => {
 
   const columns = useMemo(() => {
     if (records.length === 0) return [];
-    return Object.keys(records[0]).filter(k => k !== 'userId');
-  }, [records]);
+    const base = Object.keys(records[0]).filter(k => k !== 'userId');
+    if (!showTokens) return base;
+    // Inject token columns after 'deduction'
+    const idx = base.indexOf('deduction');
+    if (idx === -1) return base;
+    return [...base.slice(0, idx + 1), '_inputTokens', '_outputTokens', ...base.slice(idx + 1)];
+  }, [records, showTokens]);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -295,6 +305,12 @@ const Billing = ({ balance, onBalanceUpdate }) => {
           placeholder="Filter rows..."
           sx={{ minWidth: 200 }}
         />
+        {isAdmin && (
+          <FormControlLabel
+            control={<Checkbox size="small" checked={showTokens} onChange={e => setShowTokens(e.target.checked)} />}
+            label="Show tokens"
+          />
+        )}
       </Box>
 
       {loading && (
@@ -327,7 +343,11 @@ const Billing = ({ balance, onBalanceUpdate }) => {
                       sx={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <strong>{camelToTitle(col)}</strong>
+                        <strong>
+                          {col === '_inputTokens' ? 'Input Tokens'
+                            : col === '_outputTokens' ? 'Output Tokens'
+                            : camelToTitle(col)}
+                        </strong>
                         <SortIcon dir={sortField === col ? sortDir : null} />
                       </Box>
                     </TableCell>
@@ -339,7 +359,12 @@ const Billing = ({ balance, onBalanceUpdate }) => {
                   <TableRow key={i} sx={{ '&:last-child td': { border: 0 } }}>
                     {columns.map(col => (
                       <TableCell key={col} sx={{ whiteSpace: 'nowrap' }}>
-                        <CellContent col={col} value={row[col]} onSessionClick={handleLoadSession} />
+                        {col === '_inputTokens'
+                          ? (row.deduction?.inputTokens?.toLocaleString() ?? '—')
+                          : col === '_outputTokens'
+                          ? (row.deduction?.outputTokens?.toLocaleString() ?? '—')
+                          : <CellContent col={col} value={row[col]} onSessionClick={handleLoadSession} hideTokens={showTokens} />
+                        }
                       </TableCell>
                     ))}
                   </TableRow>
