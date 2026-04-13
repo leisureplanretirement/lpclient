@@ -219,7 +219,7 @@ const Billing = ({ balance, onBalanceUpdate }) => {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', p: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, height: '100%', p: 4 }}>
         <CircularProgress />
       </Box>
     );
@@ -227,7 +227,7 @@ const Billing = ({ balance, onBalanceUpdate }) => {
 
   if (!isAuthenticated) {
     return (
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 2, flex: 1 }}>
         <Typography variant="h5" sx={{ mb: 2 }}>Billing</Typography>
         <Typography>Please login to view your billing records.</Typography>
       </Box>
@@ -235,7 +235,7 @@ const Billing = ({ balance, onBalanceUpdate }) => {
   }
 
   return (
-    <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
+    <Box sx={{ p: 2, flex: 1, height: '100%', overflow: 'auto' }}>
       <Snackbar
         open={paymentSuccessOpen}
         autoHideDuration={6000}
