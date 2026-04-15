@@ -59,6 +59,7 @@ const percentFields = new Set([
   'annualInflationRate',
   'annualMedicalInflationRate',
   'marketROR',
+  'socialSecurityColaRate',
   'stateIncomeTaxRate'
 ]);
 
@@ -584,23 +585,45 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
               rowGroup: 0
             },
             {
-              title: 'Starting Account Balances',
-              headers: ['Account Type', 'Balance', 'Date'],
-              rows: (retInputs.retirementPlanningSimulationInputs?.accounts || []).map(a => [a.accountType, a.balance, a.date]),
+              title: 'Simulation Settings and Assumptions',
+              headers: ['Setting', 'Value'],
+              rows: retInputs.simulationSettingsAndAssumptionsDto ? formatEntries({
+                ...Object.fromEntries(Object.entries(retInputs.simulationSettingsAndAssumptionsDto).filter(([k]) => !['annualMedicalInflationRate', 'marketROR', 'annualInflationRate', 'socialSecurityColaRate'].includes(k))),
+                ...Object.fromEntries(Object.entries(retInputs.retirementPlanningSimulationInputs?.investorAssumptions ?? {}).filter(([k]) => k === 'stateIncomeTaxRate')),
+              }) : [],
               sideBySide: true,
               rowGroup: 0
             },
             {
-              title: 'Simulation Settings and Assumptions',
+              title: 'Investor Assumptions',
               headers: ['Setting', 'Value'],
-              rows: retInputs.simulationSettingsAndAssumptionsDto ? formatEntries(retInputs.simulationSettingsAndAssumptionsDto) : [],
+              rows: (() => {
+                const ia = retInputs.retirementPlanningSimulationInputs?.investorAssumptions ?? {};
+                const ss = retInputs.simulationSettingsAndAssumptionsDto ?? {};
+                const moved = Object.fromEntries(
+                  Object.entries(ss).filter(([k]) => ['marketROR', 'annualInflationRate', 'socialSecurityColaRate'].includes(k))
+                );
+                const filtered = Object.fromEntries(
+                  Object.entries(ia).filter(([k]) => !['medicareDeductible', 'medigapPartGPremium', 'medicareStartDate', 'stateIncomeTaxRate'].includes(k))
+                );
+                return formatEntries({ ...filtered, ...moved });
+              })(),
               sideBySide: true,
               rowGroup: 1
             },
             {
-              title: 'Investor Assumptions',
+              title: 'Medical',
               headers: ['Setting', 'Value'],
-              rows: retInputs.retirementPlanningSimulationInputs?.investorAssumptions ? formatEntries(retInputs.retirementPlanningSimulationInputs.investorAssumptions) : [],
+              rows: (() => {
+                const ia = retInputs.retirementPlanningSimulationInputs?.investorAssumptions;
+                const ss = retInputs.simulationSettingsAndAssumptionsDto;
+                return [
+                  ['Annual Medical Inflation Rate', ss?.annualMedicalInflationRate != null ? `${(ss.annualMedicalInflationRate * 100).toFixed(1)}%` : ''],
+                  ['Medicare Deductible', ia?.medicareDeductible ?? ''],
+                  ['Medigap Part G Premium', ia?.medigapPartGPremium ?? ''],
+                  ['Medicare Start Date', ia?.medicareStartDate ?? ''],
+                ];
+              })(),
               sideBySide: true,
               rowGroup: 1
             },
