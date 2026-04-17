@@ -91,7 +91,7 @@ const Settings = () => {
   const isDarkMode = mode === 'dark';
 
   return (
-    <Box sx={{ p: 3, maxWidth: 480 }}>
+    <Box sx={{ p: 3, maxWidth: 480, overflowY: 'auto', height: '100%' }}>
       <Typography variant="h5" sx={{ mb: 3 }}>Settings</Typography>
 
       <FormControlLabel
