@@ -1,4 +1,4 @@
-⏺ # PRIVACY NOTICE       
+# PRIVACY NOTICE       
 
   **Last updated April 01, 2026**                                                                                                                               
    
@@ -119,8 +119,7 @@
   language preferences, referring URLs, device name, country, location, information about how and when you use our Services, and other technical information.   
   This information is primarily needed to maintain the security and operation of our Services, and for our internal analytics and reporting purposes.
 
-  Like many businesses, we also collect information through cookies and similar technologies. You can find out more about this in our Cookie Notice:            
-  http://yahoo.com.
+  Like many businesses, we also collect information through cookies and similar technologies. You can find out more about this in Section 4 of this Privacy Notice.
                                                                                                                                                                 
   The information we collect includes:                                                                                                                          
    
@@ -201,20 +200,12 @@
    
   ***In Short:*** *We may use cookies and other tracking technologies to collect and store your information.*                                                   
                   
-  We may use cookies and similar tracking technologies (like web beacons and pixels) to gather information when you interact with our Services. Some online     
-  tracking technologies help us maintain the security of our Services and your account, prevent crashes, fix bugs, save your preferences, and assist with basic 
-  site functions.                                                                                                                                               
-                  
-  We also permit third parties and service providers to use online tracking technologies on our Services for analytics and advertising, including to help manage
-   and display advertisements, to tailor advertisements to your interests, or to send abandoned shopping cart reminders (depending on your communication 
-  preferences). The third parties and service providers use their technology to provide advertising about products and services tailored to your interests which
-   may appear either on our Services or on other websites.
+  We use cookies and similar tracking technologies only where strictly necessary to operate the Services:
 
-  To the extent these online tracking technologies are deemed to be a "sale"/"sharing" (which includes targeted advertising, as defined under the applicable    
-  laws) under applicable US state laws, you can opt out of these online tracking technologies by submitting a request as described below under section "DO 
-  UNITED STATES RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?"                                                                                                        
-                  
-  Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice: http://yahoo.com.             
+  - **Authentication cookies** set by Auth0 to keep you signed in securely. These are deleted when you log out or close your session.
+  - **Payment session cookies** set by Stripe during checkout to process your payment securely. Stripe's own privacy policy applies: https://stripe.com/privacy.
+
+  We do not use analytics, advertising, or third-party tracking cookies. No personal data is sold or shared for advertising purposes.             
    
   ---                                                                                                                                                           
                   
@@ -332,7 +323,7 @@
                   
   **Cookies and similar technologies:** Most Web browsers are set to accept cookies by default. If you prefer, you can usually choose to set your browser to    
   remove cookies and to reject cookies. If you choose to remove cookies or reject cookies, this could affect certain features or services of our Services. For 
-  further information, please see our Cookie Notice: http://yahoo.com.                                                                                          
+  further information, please see Section 4 of this Privacy Notice.                                                                                          
                   
   If you have questions or comments about your privacy rights, you may email us at leisureplanretirement@gmail.com.                                             
   

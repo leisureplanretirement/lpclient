@@ -37,8 +37,10 @@ import Admin from './pages/Admin';
 import Billing from './pages/Billing';
 import Help from './pages/Help';
 import Plans from './pages/Plans';
+import Privacy from './pages/Privacy';
 import Sessions from './pages/Sessions';
 import Settings from './pages/Settings';
+import CookieNotice from './components/CookieNotice';
 import { ColorModeContext } from './ColorModeContext';
 import { ImpersonationContext, useImpersonation } from './ImpersonationContext';
 import { createAppTheme } from './theme';
@@ -723,6 +725,7 @@ function App() {
                 <Route path="/plans" element={<Plans />} />
                 <Route path="/sessions" element={<Sessions />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/privacy" element={<Privacy />} />
                 <Route path="*" element={<MainChat onBalanceUpdate={setBalance} onCanceled={() => setCanceled(true)} />} />
               </Routes>
             </Box>
@@ -737,7 +740,9 @@ function App() {
               lineHeight: 1.4
             }}>
               <strong>Disclaimer:</strong> The information and calculations provided on this website are for educational purposes only and are not intended as financial, investment, tax, or legal advice. Individual circumstances vary, and you should consult with a qualified financial advisor, tax professional, or attorney before making any decisions based on the information provided.
+              {' '}<a href="/privacy" style={{ color: 'inherit' }}>Privacy Policy</a>
             </Box>
+            <CookieNotice />
           </Box>
         </Router>
       </ThemeProvider>
