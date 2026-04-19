@@ -740,7 +740,7 @@ function App() {
               lineHeight: 1.4
             }}>
               <strong>Disclaimer:</strong> The information and calculations provided on this website are for educational purposes only and are not intended as financial, investment, tax, or legal advice. Individual circumstances vary, and you should consult with a qualified financial advisor, tax professional, or attorney before making any decisions based on the information provided.
-              <br /><a href="/privacy" style={{ color: 'inherit' }}>Privacy Policy</a>
+              {' '}<a href="/privacy">Privacy Policy</a>
             </Box>
             <CookieNotice />
           </Box>
