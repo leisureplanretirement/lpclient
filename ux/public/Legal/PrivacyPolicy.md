@@ -117,7 +117,7 @@
   language preferences, referring URLs, device name, and information about how and when you use our Services, and other technical information.   
   This information is primarily needed to maintain the security and operation of our Services, and for our internal analytics and reporting purposes.
 
-  Like many businesses, we also collect information through cookies and similar technologies. You can find out more about this in Section 4 of this Privacy Notice.
+  Like many businesses, we also collect information through cookies and similar technologies. You can find out more about this in our [Cookie Notice](/Legal/CookieNotice.html).
                                                                                                                                                                 
   The information we collect includes:                                                                                                                          
    
@@ -194,14 +194,9 @@
 
   ## 4. DO WE USE COOKIES AND OTHER TRACKING TECHNOLOGIES?                                                                                                      
    
-  ***In Short:*** *We may use cookies and other tracking technologies to collect and store your information.*                                                   
+  ***In Short:*** *We use only strictly necessary cookies required to operate the Services.*                                                   
                   
-  We use cookies and similar tracking technologies only where strictly necessary to operate the Services:
-
-  - **Authentication cookies** set by Auth0 to keep you signed in securely. These are deleted when you log out or close your session.
-  - **Payment session cookies** set by Stripe during checkout to process your payment securely. Stripe's own privacy policy applies: https://stripe.com/privacy.
-
-  We do not use analytics, advertising, or third-party tracking cookies. No personal data is sold or shared for advertising purposes.             
+  For full details of every cookie and local storage key we use, please see our [Cookie Notice](/Legal/CookieNotice.html).             
    
   ---                                                                                                                                                           
                   
@@ -319,7 +314,7 @@
                   
   **Cookies and similar technologies:** Most Web browsers are set to accept cookies by default. If you prefer, you can usually choose to set your browser to    
   remove cookies and to reject cookies. If you choose to remove cookies or reject cookies, this could affect certain features or services of our Services. For 
-  further information, please see Section 4 of this Privacy Notice.                                                                                          
+  further information, please see our [Cookie Notice](/Legal/CookieNotice.html).                                                                                          
                   
   If you have questions or comments about your privacy rights, you may email us at leisureplanretirement@gmail.com.                                             
   
