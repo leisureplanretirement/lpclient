@@ -13,7 +13,7 @@
                                                                                                                                                                 
   **Questions or concerns?** Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about
    how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any       
-  questions or concerns, please contact us at leisureplanretirement@gmail.com.                                                                                  
+  questions or concerns, please contact us at leisureplansupport@gmail.com.                                                                                  
                   
   ---
 
@@ -282,7 +282,7 @@
   Services, you represent that you are at least 18 or that you are the parent or guardian of such a minor and consent to such minor dependent's use of the 
   Services. If we learn that personal information from users less than 18 years of age has been collected, we will deactivate the account and take reasonable   
   measures to promptly delete such data from our records. If you become aware of any data we may have collected from children under age 18, please contact us at
-   leisureplanretirement@gmail.com.
+   leisureplansupport@gmail.com.
 
   ---
 
@@ -316,7 +316,7 @@
   remove cookies and to reject cookies. If you choose to remove cookies or reject cookies, this could affect certain features or services of our Services. For 
   further information, please see our [Cookie Notice](/Legal/CookieNotice.html).                                                                                          
                   
-  If you have questions or comments about your privacy rights, you may email us at leisureplanretirement@gmail.com.                                             
+  If you have questions or comments about your privacy rights, you may email us at leisureplansupport@gmail.com.                                             
   
   ---                                                                                                                                                           
                   
@@ -431,7 +431,7 @@
                                                                                                                                                                 
   ### How to Exercise Your Rights                                                                                                                               
                   
-  To exercise these rights, you can contact us by visiting http://leisureplan.app, by emailing us at leisureplanretirement@gmail.com, or by referring to the    
+  To exercise these rights, you can contact us by visiting http://leisureplan.app, by emailing us at leisureplansupport@gmail.com, or by referring to the    
   contact details at the bottom of this document.
                                                                                                                                                                 
   Under certain US state data protection laws, you can designate an authorized agent to make a request on your behalf. We may deny a request from an authorized 
@@ -450,7 +450,7 @@
   ### Appeals     
 
   Under certain US state data protection laws, if we decline to take action regarding your request, you may appeal our decision by emailing us at               
-  leisureplanretirement@gmail.com. We will inform you in writing of any action taken or not taken in response to the appeal, including a written explanation of 
+  leisureplansupport@gmail.com. We will inform you in writing of any action taken or not taken in response to the appeal, including a written explanation of 
   the reasons for the decisions. If your appeal is denied, you may submit a complaint to your state attorney general.                                           
                   
   ### California "Shine The Light" Law                                                                                                                          
@@ -475,7 +475,7 @@
 
   ## 14. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?                                                                                                              
   
-  If you have questions or comments about this notice, you may email us at leisureplanretirement@gmail.com.                                                                                                                                                 
+  If you have questions or comments about this notice, you may email us at leisureplansupport@gmail.com.                                                                                                                                                 
   
   ---                                                                                                                                                           
                   
