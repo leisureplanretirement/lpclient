@@ -475,11 +475,7 @@
 
   ## 14. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?                                                                                                              
   
-  If you have questions or comments about this notice, you may email us at leisureplanretirement@gmail.com or contact us by post at:                            
-                  
-  Leisure Plan Retirement Inc                                                                                                                                   
-  DE              
-  United States                                                                                                                                                 
+  If you have questions or comments about this notice, you may email us at leisureplanretirement@gmail.com.                                                                                                                                                 
   
   ---                                                                                                                                                           
                   
