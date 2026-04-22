@@ -1,4 +1,4 @@
-⏺ # PRIVACY NOTICE       
+# PRIVACY NOTICE       
 
   **Last updated April 01, 2026**                                                                                                                               
    
@@ -87,8 +87,6 @@
                                                                                                                                                                 
   - names         
   - email addresses
-  - billing addresses
-  - debit/credit card numbers
   - usernames
   - passwords
   - contact or authentication data                                                                                                                              
@@ -99,9 +97,9 @@
                                                                                                                                                                 
   - financial data
 
-  **Payment Data.** We may collect data necessary to process your payment if you choose to make purchases, such as your payment instrument number, and the      
-  security code associated with your payment instrument. All payment data is handled and stored by Stripe. You may find their privacy notice link(s) here: 
-  https://stripe.com/privacy.                                                                                                                                   
+  **Conversation and Financial Scenario Data.** When you use the conversational calculator, we store your chat messages and the financial scenarios you describe — including details such as income, assets, retirement accounts, Social Security estimates, and projected expenses — on third-party cloud storage infrastructure. This data is stored under your account and is used solely to provide the service, including allowing you to return to prior sessions. It is not sold or shared with third parties for marketing purposes.
+
+  **Payment Data.** We do not currently collect payment information. We may in the future offer paid features through a third-party payment processor, at which point we will collect data necessary to process your payment, such as your payment instrument number and associated security code. Any such payment data would be handled and stored by the payment processor, not by us directly.                                                                                                                                   
                   
   **Social Media Login Data.** We may provide you with the option to register with us using your existing social media account details, like your Facebook, X,  
   or other social media account. If you choose to register in this way, we will collect certain profile information about you from the social media provider, as
@@ -116,11 +114,10 @@
                                                                                                                                                                 
   We automatically collect certain information when you visit, use, or navigate the Services. This information does not reveal your specific identity (like your
    name or contact information) but may include device and usage information, such as your IP address, browser and device characteristics, operating system, 
-  language preferences, referring URLs, device name, country, location, information about how and when you use our Services, and other technical information.   
+  language preferences, referring URLs, device name, and information about how and when you use our Services, and other technical information.   
   This information is primarily needed to maintain the security and operation of our Services, and for our internal analytics and reporting purposes.
 
-  Like many businesses, we also collect information through cookies and similar technologies. You can find out more about this in our Cookie Notice:            
-  http://yahoo.com.
+  Like many businesses, we also collect information through cookies and similar technologies. You can find out more about this in our [Cookie Notice](/Legal/CookieNotice.html).
                                                                                                                                                                 
   The information we collect includes:                                                                                                                          
    
@@ -130,13 +127,11 @@
   and files viewed, searches, and other actions you take such as which features you use), device event information (such as system activity, error reports 
   (sometimes called "crash dumps"), and hardware settings).
   - *Device Data.* We collect device data such as information about your computer, phone, tablet, or other device you use to access the Services. Depending on 
-  the device used, this device data may include information such as your IP address (or proxy server), device and application identification numbers, location, 
+  the device used, this device data may include information such as your IP address (or proxy server), device and application identification numbers,
   browser type, hardware model, Internet service provider and/or mobile carrier, operating system, and system configuration information.
-  - *Location Data.* We collect location data such as information about your device's location, which can be either precise or imprecise. How much information  
-  we collect depends on the type and settings of the device you use to access the Services. For example, we may use GPS and other technologies to collect       
-  geolocation data that tells us your current location (based on your IP address). You can opt out of allowing us to collect this information either by refusing
-   access to the information or by disabling your Location setting on your device. However, if you choose to opt out, you may not be able to use certain aspects
-   of the Services.
+  - *Location Data.* We do not collect device location or geolocation data. However, we may ask you to provide your state of residence as part of the financial
+   planning process, as state-level tax rules and regulations affect retirement calculations. This information is used solely for computation purposes and is
+   stored as part of your financial scenario data.
 
   ---
 
@@ -182,10 +177,10 @@
 
   The categories of third parties we may share personal information with are as follows:
 
-  - Cloud Computing Services                                                                                                                                    
+  - Cloud Computing Services (including storage of chat history and financial scenario data)                                                                                                                                    
   - AI Platforms
   - Data Storage Service Providers                                                                                                                              
-  - Payment Processors
+  - Payment Processors (if and when a payment system is introduced)
   - User Account Registration & Authentication Services
   - Website Hosting Service Providers                                                                                                                           
   - Performance Monitoring Tools
@@ -199,22 +194,9 @@
 
   ## 4. DO WE USE COOKIES AND OTHER TRACKING TECHNOLOGIES?                                                                                                      
    
-  ***In Short:*** *We may use cookies and other tracking technologies to collect and store your information.*                                                   
+  ***In Short:*** *We use only strictly necessary cookies required to operate the Services.*                                                   
                   
-  We may use cookies and similar tracking technologies (like web beacons and pixels) to gather information when you interact with our Services. Some online     
-  tracking technologies help us maintain the security of our Services and your account, prevent crashes, fix bugs, save your preferences, and assist with basic 
-  site functions.                                                                                                                                               
-                  
-  We also permit third parties and service providers to use online tracking technologies on our Services for analytics and advertising, including to help manage
-   and display advertisements, to tailor advertisements to your interests, or to send abandoned shopping cart reminders (depending on your communication 
-  preferences). The third parties and service providers use their technology to provide advertising about products and services tailored to your interests which
-   may appear either on our Services or on other websites.
-
-  To the extent these online tracking technologies are deemed to be a "sale"/"sharing" (which includes targeted advertising, as defined under the applicable    
-  laws) under applicable US state laws, you can opt out of these online tracking technologies by submitting a request as described below under section "DO 
-  UNITED STATES RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?"                                                                                                        
-                  
-  Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice: http://yahoo.com.             
+  For full details of every cookie and local storage key we use, please see our [Cookie Notice](/Legal/CookieNotice.html).             
    
   ---                                                                                                                                                           
                   
@@ -228,7 +210,7 @@
                   
   **Use of AI Technologies**                                                                                                                                    
    
-  We provide the AI Products through third-party service providers ("AI Service Providers"), including Cerebras. As outlined in this Privacy Notice, your input,
+  We provide the AI Products through one or more third-party service providers ("AI Service Providers"). As outlined in this Privacy Notice, your input,
    output, and personal information will be shared with and processed by these AI Service Providers to enable your use of our AI Products for purposes outlined 
   in "WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?" You must not use the AI Products in any way that violates the terms or policies of any AI      
   Service Provider.
@@ -332,7 +314,7 @@
                   
   **Cookies and similar technologies:** Most Web browsers are set to accept cookies by default. If you prefer, you can usually choose to set your browser to    
   remove cookies and to reject cookies. If you choose to remove cookies or reject cookies, this could affect certain features or services of our Services. For 
-  further information, please see our Cookie Notice: http://yahoo.com.                                                                                          
+  further information, please see our [Cookie Notice](/Legal/CookieNotice.html).                                                                                          
                   
   If you have questions or comments about your privacy rights, you may email us at leisureplanretirement@gmail.com.                                             
   
