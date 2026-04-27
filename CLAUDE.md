@@ -31,6 +31,14 @@ To use a local backend, change references in `src/api.js` and `.env` to `localho
 - Balance sufficient: show normally
 - 402 received: show balance in warning colour (red/amber) alongside the estimated shortfall
 
+### Math rendering in ChatWindow
+Assistant messages are rendered via `ReactMarkdown` with `remark-math` and `rehype-katex`. The LLM backend outputs LaTeX using `\[...\]` (display) and `\(...\)` (inline) delimiters, but `remark-math` expects `$$...$$` and `$...$`. A `normalizeLatexDelimiters` function in [ChatWindow.jsx](ux/src/components/ChatWindow.jsx) preprocesses `msg.text` before rendering:
+- Converts `\[...\]` → `$$...$$` and `\(...\)` → `$...$`
+- Within those blocks, replaces `\$` and `$` (currency amounts the LLM writes as e.g. `\$479`) with the fullwidth `＄` so they don't terminate the math expression early
+- Outside math blocks, also replaces `$NNN` currency patterns with `＄` to prevent stray dollar signs from being paired as math delimiters
+
+`singleDollarTextMath` is left at its default (enabled) so `$...$` inline math works.
+
 ### Environment variables (add to `ux/.env`)
 ```
 VITE_STRIPE_PRICE_10=price_xxx

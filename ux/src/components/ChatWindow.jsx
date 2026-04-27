@@ -48,6 +48,16 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
+const normalizeLatexDelimiters = (text) => {
+  // Convert \[...\] and \(...\) to $$/$$ delimiters, protecting any $ inside
+  let result = text
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_, inner) => `$$${inner.replace(/\\?\$/g, '＄')}$$`)
+    .replace(/\\\(([\s\S]*?)\\\)/g, (_, inner) => `$${inner.replace(/\\?\$/g, '＄')}$`);
+  // Protect currency amounts outside math (e.g. $303,464 or \$479) from being parsed as delimiters
+  result = result.replace(/\\?\$(?=[\d,])/g, '＄');
+  return result;
+};
+
 const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed }) => {
   const theme = useTheme();
   const [inputValue, setInputValue] = useState('');
@@ -235,7 +245,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
                       backgroundColor: theme.palette.action.hover,
                     }
                   }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: false }]]} rehypePlugins={[rehypeKatex]}>{msg.text}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{normalizeLatexDelimiters(msg.text)}</ReactMarkdown>
                   </Box>
                 )}
                 {msg.queryId && (
