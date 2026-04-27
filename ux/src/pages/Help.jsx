@@ -44,6 +44,11 @@ const Help = () => {
           How Inflation Works
         </Link>
       </Typography>
+      <Typography variant="body2">
+        <Link href="/help/MarketROR.html" target="_blank" rel="noopener noreferrer">
+          How Market Rate of Return Works
+        </Link>
+      </Typography>
     </Box>
   );
 };

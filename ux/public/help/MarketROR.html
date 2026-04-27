@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>How Market Rate of Return Works</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 860px;
+            margin: 40px auto;
+            padding: 0 24px;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        h1 { font-size: 1.8rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+        h2 { font-size: 1.2rem; margin-top: 36px; color: #2c2c2c; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+        th {
+            background: #f5f5f5;
+            text-align: left;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+        }
+        td {
+            padding: 9px 14px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        tr:nth-child(even) td { background: #fafafa; }
+        .callout {
+            background: #f0f7ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+<h1>How Market Rate of Return Works</h1>
+
+<p>The market rate of return (default <strong>5%</strong>) controls how fast your investment account balances grow each year. It is applied monthly to every account — savings, tax-deferred (IRA/401k), and tax-exempt (Roth).</p>
+
+<h2>What It Does</h2>
+<p>Each month the calculator multiplies each account balance by <strong>1 + (annual rate ÷ 12)</strong>. Over a full year this compounds to slightly more than the stated annual rate.</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Annual rate</th>
+            <th>Effective annual growth (compounded monthly)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>0%</td><td>0.00% — balances only change from deposits and withdrawals</td></tr>
+        <tr><td>5%</td><td>5.12%</td></tr>
+        <tr><td>7%</td><td>7.23%</td></tr>
+        <tr><td>10%</td><td>10.47%</td></tr>
+    </tbody>
+</table>
+
+<h2>Why It Matters</h2>
+<ul>
+    <li><strong>Portfolio longevity</strong> — a higher rate means your savings last longer before they are depleted.</li>
+    <li><strong>Offsetting shortfalls</strong> — if your expenses exceed your income, investment growth can make up part or all of the difference. For example, a $500,000 portfolio at 5% grows by roughly $25,000/year, which can offset a $15,000/year spending shortfall.</li>
+    <li><strong>Roth IRA growth</strong> — tax-exempt accounts grow at this rate tax-free, making them especially valuable over a long simulation.</li>
+</ul>
+
+<h2>What It Does Not Control</h2>
+<p>The market rate of return only affects <em>account balances</em>. It does not affect how income or expenses grow over time — those are controlled by the inflation rate, Social Security COLA rate, or a custom rate you specify per item.</p>
+
+<h2>Practical Examples</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Scenario</th>
+            <th>Sample Chat Prompt</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Use a conservative return assumption</td>
+            <td><em>"Set the market rate of return to 4%."</em></td>
+        </tr>
+        <tr>
+            <td>Model a more optimistic portfolio</td>
+            <td><em>"Assume a 7% annual market return."</em></td>
+        </tr>
+        <tr>
+            <td>See what happens with zero investment growth</td>
+            <td><em>"Run the simulation with 0% market rate of return."</em></td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="callout">
+    <strong>Key point:</strong> The market rate of return is a long-run average assumption — it does not model year-to-year volatility. Every month the calculator applies the same steady growth rate, so the results represent a smooth average-return scenario rather than a sequence-of-returns risk analysis.
+</div>
+
+</body>
+</html>
