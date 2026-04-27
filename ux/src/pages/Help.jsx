@@ -49,6 +49,11 @@ const Help = () => {
           How Market Rate of Return Works
         </Link>
       </Typography>
+      <Typography variant="body2">
+        <Link href="/help/SocialSecurity.html" target="_blank" rel="noopener noreferrer">
+          How Social Security Works
+        </Link>
+      </Typography>
     </Box>
   );
 };

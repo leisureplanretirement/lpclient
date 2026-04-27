@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>How Social Security Works in the Retirement Calculator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 860px;
+            margin: 40px auto;
+            padding: 0 24px;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        h1 { font-size: 1.8rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+        h2 { font-size: 1.2rem; margin-top: 36px; color: #2c2c2c; }
+        h3 { font-size: 1rem; margin-top: 28px; color: #2c2c2c; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.95rem;
+        }
+        th {
+            background: #f5f5f5;
+            text-align: left;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+        }
+        td {
+            padding: 9px 14px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        tr:nth-child(even) td { background: #fafafa; }
+        code {
+            background: #f0f0f0;
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 0.9em;
+            font-family: "SFMono-Regular", Consolas, monospace;
+        }
+        .callout {
+            background: #f0f7ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+        .warning {
+            background: #fff8e1;
+            border-left: 4px solid #f59e0b;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 6px; }
+        .disclaimer {
+            border-top: 1px solid #e0e0e0;
+            margin-top: 40px;
+            padding-top: 16px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+<h1>How Social Security Works in the Retirement Calculator</h1>
+
+<h2>Setting Up Your Benefit</h2>
+<p>Tell the calculator your monthly Social Security benefit and when it starts. You can specify any start date — for example, if you are deferring to age 70 to maximise your benefit.</p>
+
+<div class="callout">
+    <strong>One benefit per person.</strong> The calculator supports one Social Security income stream per investor. If you and a spouse both have benefits, model them separately.
+</div>
+
+<h2>How the Benefit Grows Over Time</h2>
+<p>Each year your Social Security benefit increases by the <strong>Social Security COLA rate</strong> (default 2.5%). This matches how the real-world Cost-of-Living Adjustment works. You can change the assumed COLA rate to model different scenarios.</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Scenario</th>
+            <th>Sample Chat Prompt</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Start benefit at age 67</td>
+            <td><em>"I will receive $2,400/month in Social Security starting at age 67."</em></td>
+        </tr>
+        <tr>
+            <td>Defer to age 70</td>
+            <td><em>"My Social Security benefit is $3,200/month starting at age 70."</em></td>
+        </tr>
+        <tr>
+            <td>Change the COLA assumption</td>
+            <td><em>"Set the Social Security COLA rate to 2%."</em></td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>How Much of Your Benefit Is Taxable</h2>
+<p>The IRS taxes a portion of Social Security benefits depending on your <strong>provisional income</strong> — a measure of combined income that includes half of your annual SS benefit plus everything else (IRA withdrawals, interest, wages, etc.).</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Provisional income (single filer)</th>
+            <th>Provisional income (married filing jointly)</th>
+            <th>Taxable portion of SS</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Below $25,000</td>
+            <td>Below $32,000</td>
+            <td>0% — SS is tax-free</td>
+        </tr>
+        <tr>
+            <td>$25,000 – $34,000</td>
+            <td>$32,000 – $44,000</td>
+            <td>Up to 50%</td>
+        </tr>
+        <tr>
+            <td>Above $34,000</td>
+            <td>Above $44,000</td>
+            <td>Up to 85%</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>Provisional income</strong> = ½ × annual SS benefit + all other income (IRA/401k withdrawals, interest, dividends, wages)</p>
+
+<div class="warning">
+    <strong>IRA withdrawals push SS into higher taxation.</strong> If you need to withdraw from a tax-deferred account (IRA, 401k) to cover expenses, those withdrawals count as income and can push your provisional income above the thresholds — causing more of your SS benefit to become taxable.
+</div>
+
+<h3>Practical example</h3>
+<p>You receive $24,000/year in Social Security and withdraw $20,000 from an IRA. Your provisional income is:</p>
+<p><code>½ × $24,000 + $20,000 = $32,000</code></p>
+<p>That puts a single filer just below the 85% threshold ($34,000), so up to 50% of the SS benefit may be taxable.</p>
+
+<h2>What Happens to Surplus SS Income</h2>
+<p>If your Social Security income exceeds your monthly expenses and Medicare premiums, the surplus is deposited into your savings account each month. It is <em>not</em> swept into your IRA or Roth — only the regular savings (brokerage) account receives the surplus.</p>
+
+<h2>Medicare Is Applied Automatically</h2>
+<p>Once you reach age 65 (or your specified Medicare start date), the calculator automatically adds Medicare Part B premiums, Part D, and any applicable IRMAA surcharges as monthly expenses. These reduce the effective surplus from Social Security more than simple arithmetic suggests.</p>
+
+<div class="callout">
+    <strong>IRMAA note:</strong> Medicare Part B and Part D premiums increase for higher-income retirees. The surcharge is based on your income from <em>two years prior</em>. If your income was high in the years before retirement, you may face higher premiums in the early years of the simulation.
+</div>
+
+<h2>Common Questions</h2>
+
+<h3>Why is my SS partially taxable even with low expenses?</h3>
+<p>If you have savings or investment accounts, the market returns on those accounts count as income for Medicare IRMAA purposes but <em>not</em> for SS taxation (unrealised gains are not income). However, if you withdraw from an IRA, that withdrawal counts toward provisional income. Check whether the calculator is modelling IRA withdrawals you may not have intended.</p>
+
+<h3>Why does the surplus deposited to savings seem smaller than expected?</h3>
+<p>Medicare premiums are automatically deducted each month, and federal income tax on the taxable portion of your SS benefit is withheld at year-end. Both reduce the amount available to deposit to savings.</p>
+
+<h2>Government References</h2>
+<ul>
+    <li><a href="https://www.irs.gov/publications/p915" target="_blank" rel="noopener noreferrer">IRS Publication 915 — Social Security and Equivalent Railroad Retirement Benefits</a> — the authoritative source for SS taxation rules and the provisional income worksheet</li>
+    <li><a href="https://www.ssa.gov/benefits/retirement/" target="_blank" rel="noopener noreferrer">Social Security Administration — Retirement Benefits</a> — how benefits are calculated, when to claim, and delayed retirement credits</li>
+    <li><a href="https://www.ssa.gov/cola/" target="_blank" rel="noopener noreferrer">Social Security Administration — Cost-of-Living Adjustments</a> — historical and current COLA rates</li>
+    <li><a href="https://www.medicare.gov/your-medicare-costs/part-b-costs" target="_blank" rel="noopener noreferrer">Medicare.gov — Part B Costs</a> — current Part B premiums and IRMAA surcharge tables</li>
+    <li><a href="https://www.ssa.gov/benefits/medicare/irmaa.html" target="_blank" rel="noopener noreferrer">SSA — Medicare Income-Related Monthly Adjustment Amount (IRMAA)</a> — how prior-year income affects your Medicare premiums</li>
+</ul>
+
+<div class="disclaimer">
+    <strong>Disclaimer:</strong> This page is for educational purposes only and is not financial, tax, or legal advice. Social Security rules, tax thresholds, and Medicare premiums are subject to change by law. The figures shown reflect current IRS and SSA rules and may not apply in future years. Consult a qualified financial advisor, tax professional, or Social Security specialist before making claiming decisions.
+</div>
+
+</body>
+</html>
