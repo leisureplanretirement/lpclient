@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { Snackbar, Alert } from '@mui/material';
+import { Snackbar, Alert, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import {
   ApiError,
   CanceledAccountError,
@@ -37,6 +37,8 @@ import Admin from './pages/Admin';
 import Billing from './pages/Billing';
 import Help from './pages/Help';
 import Plans from './pages/Plans';
+import PleaseVerify from './pages/PleaseVerify';
+import PostVerify from './pages/PostVerify';
 import Privacy from './pages/Privacy';
 import Sessions from './pages/Sessions';
 import Settings from './pages/Settings';
@@ -94,7 +96,7 @@ function CanceledRedirect({ canceled }) {
 }
 
 function MainChat({ onBalanceUpdate, onCanceled }) {
-  const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated, isLoading, error: auth0Error } = useAuth0();
   const location = useLocation();
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -118,6 +120,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const hasLoadedSessionRef = useRef(false);
   const [lowBalance, setLowBalance] = useState(false);
   const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
+  const [authError, setAuthError] = useState(null);
   const [loadedQueryHistory, setLoadedQueryHistory] = useState([]);
   const [chatPrefill, setChatPrefill] = useState('');
 
@@ -237,6 +240,24 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, isLoading]);
+
+  // Handle Auth0 error redirect (e.g. email not verified)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+    const description = params.get('error_description');
+    if (error) {
+      setAuthError(description || error);
+      navigate('/', { replace: true });
+    }
+  }, []);
+
+  // Fallback: catch errors the Auth0 SDK surfaces after consuming the URL params itself
+  useEffect(() => {
+    if (auth0Error && !authError) {
+      setAuthError(auth0Error.message || String(auth0Error));
+    }
+  }, [auth0Error]);
 
   // Handle "New Chat" from menu
   useEffect(() => {
@@ -525,6 +546,19 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         </Alert>
       </Snackbar>
 
+      <Dialog open={!!authError} onClose={() => setAuthError(null)}>
+        <DialogTitle>Login Failed</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{authError}</DialogContentText>
+          <DialogContentText sx={{ mt: 2 }}>
+            Once you have verified your email, you can log in again using the Login button.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAuthError(null)} autoFocus>OK</Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Column 1: Chat */}
       <Box sx={{
         width: `${splitPercent}%`,
@@ -718,6 +752,8 @@ function App() {
             <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
               <Routes>
                 <Route path="/canceled" element={<AccountCanceled />} />
+                <Route path="/please-verify" element={<PleaseVerify />} />
+                <Route path="/post-verify" element={<PostVerify />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/billing" element={<Billing balance={balance} onBalanceUpdate={setBalance} />} />
                 <Route path="/help" element={<Help />} />
