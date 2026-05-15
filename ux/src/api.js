@@ -65,14 +65,22 @@ function buildHeaders(token, includeImpersonation = true) {
 export async function sendMessage(message, sessionId, token) {
   const payload = { message };
   if (sessionId) payload.sessionId = sessionId;
-  const res = await fetch(`${API_BASE}/Chat`, {
-    method: 'POST',
-    headers: buildHeaders(token, false),
-    body: JSON.stringify(payload),
-  });
-  const text = await res.text();
-  if (!res.ok) throwOnError(res, text);
-  return JSON.parse(text);
+  const body = JSON.stringify(payload);
+  const maxRetries = 5;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const res = await fetch(`${API_BASE}/Chat`, {
+      method: 'POST',
+      headers: buildHeaders(token, false),
+      body,
+    });
+    if (res.status === 409 && attempt < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      continue;
+    }
+    const text = await res.text();
+    if (!res.ok) throwOnError(res, text);
+    return JSON.parse(text);
+  }
 }
 
 // GET /api/chat/History
