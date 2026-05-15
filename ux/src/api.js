@@ -266,7 +266,7 @@ export async function fetchSession(sessionId, token) {
 export async function deleteSession(sessionId, token) {
   const res = await fetch(`${API_BASE}/Session/${encodeURIComponent(sessionId)}`, {
     method: 'DELETE',
-    headers: buildHeaders(token, false)
+    headers: buildHeaders(token)
   });
   if (!res.ok) {
     const text = await res.text();
@@ -347,7 +347,7 @@ export async function createTopUpSession(priceId, token) {
 export async function updateSession(sessionId, name, token) {
   const res = await fetch(`${API_BASE}/Session/Update`, {
     method: 'PUT',
-    headers: buildHeaders(token, false),
+    headers: buildHeaders(token),
     body: JSON.stringify({ sessionId, name })
   });
   if (!res.ok) {
