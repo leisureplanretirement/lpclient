@@ -109,6 +109,7 @@
     }
 
     .badge-z  { background: #1e2a1a; color: #86efac; border: 1px solid #166534; }
+    .badge-zc { background: #1a2318; color: #6ee7b7; border: 1px solid #059669; }
     .badge-a  { background: #1a2340; color: #93c5fd; border: 1px solid #1d4ed8; }
     .badge-b  { background: #2a1f1a; color: #fdba74; border: 1px solid #c2410c; }
     .badge-c  { background: #271a33; color: #c4b5fd; border: 1px solid #7c3aed; }
@@ -145,6 +146,7 @@
 
     /* Colour helpers for diagram text */
     .cz  { color: #86efac; }
+    .czc { color: #6ee7b7; }
     .ca  { color: #93c5fd; }
     .cb  { color: #fdba74; }
     .cc  { color: #c4b5fd; }
@@ -293,10 +295,25 @@
     <div class="td">
       <strong>Gatekeeper.</strong> Determines whether the user has provided
       enough information (income, expenses, savings) to run a meaningful
-      simulation. Responds with <code>SUFFICIENT</code> or
-      <code>NOT SUFFICIENT</code> plus a description. If not sufficient, it
-      replies directly to the user and clears the model context so the next
-      attempt still counts as <em>first time</em>.
+      simulation. Returns one of three judgements: <code>SUFFICIENT</code>,
+      <code>NOT SUFFICIENT</code>, or <code>CONVERSATIONAL</code>. NOT SUFFICIENT
+      logs the description to the user and preserves conversation history so
+      the next attempt still counts as <em>first time</em>. CONVERSATIONAL
+      routes to TaskZ-Conversational for general questions before a scenario
+      is established. Receives the <strong>raw</strong> user input (never
+      the preprocessed text) to prevent DOB skew.
+    </div>
+
+    <div class="td"><span class="badge badge-zc">TaskZ-Conv</span></div>
+    <div class="td"><code>ConversationalSubAgent</code></div>
+    <div class="td"><span class="when-pill when-first">First query only</span></div>
+    <div class="td">
+      <strong>Pre-scenario conversationalist.</strong> Invoked when Task Z
+      returns <code>CONVERSATIONAL</code> — i.e. the user asked a general
+      question before providing enough data to run a simulation. Answers the
+      question directly using the raw conversation history (no preprocessed
+      DOB injection). Keeps <em>firstTime</em> true so the next substantive
+      query still goes through the full validation flow.
     </div>
 
     <div class="td"><span class="badge badge-a">Task A</span></div>
@@ -370,8 +387,8 @@
       <strong>read-only snapshot</strong> via <code>FetchCompactedContext()</code>,
       which can inject a different system prompt and elide large tool payloads.
       Only the orchestrator writes back to <code>ModelContext</code> (after
-      Task A completes). Calling <code>Clear()</code> resets to the initial
-      system prompt, used when Task Z says NOT SUFFICIENT.
+      Task A completes or when a user message is committed for a non-SUFFICIENT
+      branch).
     </p>
   </div>
 
@@ -390,13 +407,19 @@
   <div class="agent-card">
     <div class="agent-card-header">
       <span style="font-size:1.2rem">📅</span>
-      <div class="agent-card-title">DatePreprocessor (step 0)</div>
+      <div class="agent-card-title">DatePreprocessor</div>
     </div>
     <p>
-      On the first query, before any task runs, a separate LLM call rewrites
-      the user's message to make all ages and dates explicit (e.g. "retire at
-      65" becomes "retire at 65 (2041-03-01)"). On subsequent queries the user
-      text is added directly to context.
+      On the first query, a separate LLM call is launched <strong>concurrently</strong>
+      with Task Z. It rewrites the user's message to make all ages and dates
+      explicit (e.g. "retire at 65" becomes "retire at 65 [2041-03-01]") and
+      injects an inferred date of birth. Task Z receives the <strong>raw</strong>
+      user input — not the preprocessed text — to prevent a fabricated DOB from
+      influencing the sufficiency judgement. The preprocessed text is only
+      awaited and committed to <code>ModelContext</code> if Task Z returns
+      <code>SUFFICIENT</code>. For CONVERSATIONAL or NOT SUFFICIENT outcomes,
+      the raw user input is committed and the preprocessed result is discarded.
+      On subsequent queries the user text is added directly to context.
     </p>
   </div>
 
@@ -404,74 +427,85 @@
   <h2>Pattern 1 — First Query</h2>
 
   <p>
-    The first query triggers a validation-heavy flow. The goal is to ensure the
-    user's intent is clear <em>before</em> running the simulation, and to
-    verify the generated tool request is correct <em>after</em>.
+    The first query triggers a validation-heavy flow. The DatePreprocessor and
+    Task Z launch concurrently. Task Z is awaited first — its judgement
+    determines which branch is taken. Only on the SUFFICIENT branch does
+    Task A run and the preprocessed text get committed to context.
   </p>
 
   <div class="diagram">
     <pre>
-  User Query
-      │
-      ▼
-  ┌─────────────────────────┐
-  │  DatePreprocessor (LLM) │  Rewrites query with explicit calendar dates
-  └─────────────────────────┘
-      │
-      ▼ preprocessed query added to ModelContext
+  User Query (raw)
       │
       ├──────────────────────────────────────────────────┐
-      │ (parallel launch)                                │
+      │ (concurrent launch — both receive raw input)     │
       ▼                                                  ▼
-  ┌───────────────────────┐                  ┌───────────────────────┐
-  │  <span class="cz">Task Z</span>               │                  │  <span class="ca">Task A</span>               │
-  │  QuerySufficiency     │                  │  ToolCallSubAgent     │
-  │  "Does user have      │                  │  Calls RunSimulation  │
-  │   enough info?"       │                  │  MCP tool             │
-  └───────────────────────┘                  └───────────────────────┘
-      │ await Z first                             │ (running…)
+  ┌─────────────────────────┐          ┌───────────────────────┐
+  │  DatePreprocessor (LLM) │          │  <span class="cz">Task Z</span>               │
+  │  Rewrites query with    │          │  QuerySufficiency     │
+  │  explicit calendar dates│          │  "Does user have      │
+  │  Injects inferred DOB   │          │   enough info?"       │
+  │  (result held until     │          │                       │
+  │   SUFFICIENT confirmed) │          └───────────────────────┘
+  └─────────────────────────┘               │ await Z first
+      │ (result held…)                      │
+      │                      ┌──────────────┼──────────────────────┐
+      │                      │              │                      │
+      │                <span class="cr">NOT SUFFICIENT</span>   <span class="cy">CONVERSATIONAL</span>           <span class="cg">SUFFICIENT</span>
+      │                      │              │                      │
+      │                      ▼              ▼                      │
+      │              raw userInput   raw userInput                 │
+      │              → modelContext  → modelContext                │
+      │                      │              │                      │
+      │              TaskZ desc    ┌────────────────────────┐      │
+      │              logged to     │  <span class="czc">TaskZ-Conversational</span>  │      │
+      │              user          │  ConversationalSubAgent│      │
+      │              firstTime     │  Answers general       │      │
+      │              stays true    │  question              │      │
+      │                      │     └────────────────────────┘      │
+      │              ← return │              │                     │
+      │                             ← return                       │
+      │                                                            │
+      │  await DatePreprocessor ◄──────────────────────────────────┘
+      │  preprocessed text added to ModelContext
       │
-      ├─── <span class="cr">NOT SUFFICIENT</span>
-      │       │
-      │       ▼
-      │   Log description to user
-      │   ModelContext.Clear()           ← next call is still "first time"
-      │   ← return (done)
+      ▼
+  ┌───────────────────────┐
+  │  <span class="ca">Task A</span>               │
+  │  ToolCallSubAgent     │
+  │  Calls RunSimulation  │
+  │  MCP tool             │
+  └───────────────────────┘
       │
-      └─── <span class="cg">SUFFICIENT</span>
+      ├── <span class="cr">Task A failed</span> ──► return failure
+      │
+      └── <span class="cg">Task A succeeded</span>
               │
-              ▼ await Task A
+              │  Tool request JSON stored in ChatQueryRepository
               │
-              ├── <span class="cr">Task A failed</span> ──► return failure
-              │
-              └── <span class="cg">Task A succeeded</span>
-                      │
-                      │  Tool request JSON stored in ChatQueryRepository
-                      │
-                      ├──────────────────────────────────────────────────┐
-                      │ (parallel launch)                                │
-                      ▼                                                  ▼
-                  ModelContext += TaskA.NewModelContext        ┌───────────────────────┐
-                      │                                        │  <span class="ce">Task E</span>               │
-                      ▼                                        │  ToolCallValidation   │
-                  ┌───────────────────────┐                    │  "Was the tool call   │
-                  │  <span class="cd">Task D</span>               │                    │   correct?"           │
-                  │  AnalyzeTool          │                    └───────────────────────┘
-                  │  (fresh result)       │                          │
-                  └───────────────────────┘                          │
-                          │                                          │
-                          │                            ┌─────────────┴───────────────┐
-                          │                            │                             │
-                          │                         <span class="cg">VALID</span>                        <span class="cr">INVALID</span>
-                          │                            │                             │
-                          │                            │                    KickOffAED()
-                          │                            │                    (retry, max 2×):
-                          │                            │                      re-run Task A
-                          ▼                            │                      re-launch E &amp; D
-                  await Task D ◄───────────────────────┘
-                          │
-                          ▼
-                  Surface Task D response to user  ✓
+              ├──────────────────────────────────────────────────┐
+              │ (parallel launch)                                │
+              ▼                                                  ▼
+          ModelContext += TaskA.NewModelContext        ┌───────────────────────┐
+              │                                        │  <span class="ce">Task E</span>               │
+              ▼                                        │  ToolCallValidation   │
+          ┌───────────────────────┐                    │  "Was the tool call   │
+          │  <span class="cd">Task D</span>               │                    │   correct?"           │
+          │  AnalyzeTool          │                    └───────────────────────┘
+          │  (fresh result)       │                          │
+          └───────────────────────┘                          │
+                  │                            ┌─────────────┴───────────────┐
+                  │                            │                             │
+                  │                         <span class="cg">VALID</span>                        <span class="cr">INVALID</span>
+                  │                            │                             │
+                  │                            │                    KickOffAED()
+                  │                            │                    (retry, max 2×):
+                  │                            │                      re-run Task A
+                  ▼                            │                      re-launch E &amp; D
+          await Task D ◄───────────────────────┘
+                  │
+                  ▼
+          Surface Task D response to user  ✓
     </pre>
   </div>
 
@@ -479,30 +513,46 @@
   <ul class="steps">
     <li>
       <div class="step-num">1</div>
-      <div>Task Z and Task A are launched simultaneously. Task Z is awaited
-      first — if the user hasn't provided enough information, the flow stops
-      immediately and Task A's result (when it arrives) is discarded.</div>
+      <div>The DatePreprocessor and Task Z launch concurrently, both receiving
+      the <strong>raw</strong> user input. Task Z is awaited first. The
+      preprocessed result is held until the SUFFICIENT branch is confirmed.</div>
     </li>
     <li>
       <div class="step-num">2</div>
+      <div>Task Z has three outcomes. NOT SUFFICIENT commits the raw user
+      message to <code>ModelContext</code> (preserving conversation history)
+      and logs a description to the user — <em>firstTime</em> stays true.
+      CONVERSATIONAL commits the raw message and routes to
+      <code>TaskZ-Conversational</code> for a direct answer — <em>firstTime</em>
+      stays true. SUFFICIENT proceeds to await the preprocessed text and
+      launch Task A.</div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div>On SUFFICIENT, the preprocessed text (with explicit dates and
+      inferred DOB) is awaited and added to <code>ModelContext</code>. Task A
+      then runs sequentially — it does <strong>not</strong> overlap with Task Z.</div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
       <div>Once Task A succeeds, its three messages
       (<code>FunctionCall</code>, <code>FunctionResult</code>,
       <code>AssistantText</code>) are written permanently into
       <code>ModelContext</code>.</div>
     </li>
     <li>
-      <div class="step-num">3</div>
+      <div class="step-num">5</div>
       <div>Task E and Task D run in parallel. Task E validates the tool
       request; Task D generates the user-facing analysis.</div>
     </li>
     <li>
-      <div class="step-num">4</div>
+      <div class="step-num">6</div>
       <div>If Task E returns INVALID, <code>KickOffAED()</code> injects Task
       E's critique messages into the context for correction guidance, then
       re-runs Tasks A, E, and D. Up to 2 retry attempts are made.</div>
     </li>
     <li>
-      <div class="step-num">5</div>
+      <div class="step-num">7</div>
       <div>Task D's deferred response is flushed to the user only after
       Task E confirms validity (or retries are exhausted).</div>
     </li>
@@ -523,11 +573,11 @@
       │
       ▼  (added directly to ModelContext as User message)
       │
-      ├──────────────────────────────────────────────────────────────────┐
-      │ (parallel launch — all three start immediately)                  │
+      ├─────────────────────────────────────────────────────┐
+      │ (parallel launch — all three start immediately)     │
       ▼                          ▼                          ▼
   ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────────┐
-  │  <span class="ca">Task A</span>            │   │  <span class="cb">Task B</span>            │   │  <span class="cc">Task C</span>               │
+  │  <span class="ca">Task A</span>          │   │  <span class="cb">Task B</span>          │   │  <span class="cc">Task C</span>              │
   │  ToolCallSubAgent│   │  AnalyzeTool     │   │  NeedToolResponse    │
   │  Calls MCP tool  │   │  (PRIOR result)  │   │  "Is a new tool call │
   │  unconditionally │   │  Speculative     │   │   actually needed?"  │
@@ -551,9 +601,9 @@
           │                 (no new tool             (new tool
           ▼                  needed)                  needed)
   ┌──────────────────┐            │                    │
-  │  <span class="cd">Task D</span>            │            ▼             wait for Task D
+  │  <span class="cd">Task D</span>          │            ▼             wait for Task D
   │  AnalyzeTool     │  Use <span class="cb">Task B</span>'s         to complete
-  │  (FRESH result)  │  response  ✓                   │
+  │  (FRESH result)  │  response  ✓                    │
   └──────────────────┘                                 │
           │                                            ▼
           ▼                                    Use <span class="cd">Task D</span>'s
@@ -621,15 +671,19 @@
     <div class="th" style="text-align:center">Subsequent Queries</div>
 
     <div class="td">Date preprocessing</div>
-    <div class="td">LLM rewrites query with explicit dates</div>
+    <div class="td">LLM rewrites query with explicit dates — runs concurrently with Task Z on raw input; committed to context only if SUFFICIENT</div>
     <div class="td">Query added to context as-is</div>
 
     <div class="td">Sufficiency check</div>
-    <div class="td"><span class="badge badge-z">Task Z</span> runs (parallel with A)</div>
+    <div class="td"><span class="badge badge-z">Task Z</span> runs concurrently with preprocessor (3 outcomes: SUFFICIENT / NOT SUFFICIENT / CONVERSATIONAL)</div>
+    <div class="td">Skipped</div>
+
+    <div class="td">General Q&amp;A (pre-scenario)</div>
+    <div class="td"><span class="badge badge-zc">TaskZ-Conv</span> — if Task Z returns CONVERSATIONAL</div>
     <div class="td">Skipped</div>
 
     <div class="td">Tool call</div>
-    <div class="td"><span class="badge badge-a">Task A</span> — unconditional</div>
+    <div class="td"><span class="badge badge-a">Task A</span> — runs after SUFFICIENT confirmed</div>
     <div class="td"><span class="badge badge-a">Task A</span> — unconditional, parallel</div>
 
     <div class="td">Speculative analysis</div>
@@ -662,10 +716,22 @@
       <div class="agent-card-title">QuerySufficiencySubAgent</div>
     </div>
     <p><span class="label">System prompt</span> — <code>SystemPrompt-QuerySufficiency.txt</code></p>
-    <p><span class="label">Context view</span> — Only the system message + current user message. Ignores shared ModelContext entirely.</p>
-    <p><span class="label">Output</span> — JSON: <code>{ "judgement": "SUFFICIENT" | "NOT SUFFICIENT", "description": "…" }</code></p>
-    <p><span class="label">On NOT SUFFICIENT</span> — Logs <code>description</code> to user, calls <code>ModelContext.Clear()</code>, returns <code>true</code> (firstTime stays true next call).</p>
+    <p><span class="label">Context view</span> — <code>FetchCompactedContext(modelContext, forceElideAllResponses: true)</code> plus the current raw user query appended. Tool responses are elided; conversation history is visible.</p>
+    <p><span class="label">Output</span> — JSON: <code>{ "judgement": "SUFFICIENT" | "NOT SUFFICIENT" | "CONVERSATIONAL", "description": "…" }</code></p>
+    <p><span class="label">On NOT SUFFICIENT</span> — Raw user message committed to <code>ModelContext</code>, <code>description</code> logged to user, <em>firstTime</em> stays true on the next call.</p>
+    <p><span class="label">On CONVERSATIONAL</span> — Raw user message committed to <code>ModelContext</code>, routes to <code>TaskZ-Conversational</code>, <em>firstTime</em> stays true on the next call.</p>
     <p><span class="label">Failure behaviour</span> — Defaults to <code>SUFFICIENT</code> to avoid blocking valid queries.</p>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-card-header">
+      <span class="badge badge-zc">TaskZ-Conv</span>
+      <div class="agent-card-title">ConversationalSubAgent</div>
+    </div>
+    <p><span class="label">System prompt</span> — <code>SystemPrompt-Conversational.txt</code></p>
+    <p><span class="label">Context view</span> — <code>FetchCompactedContext()</code> using the raw conversation history. No preprocessed text or injected DOB is present — the user's original wording is preserved.</p>
+    <p><span class="label">Output</span> — Natural-language answer to the user's general question, delivered directly (no deferred logger). Logged via <code>dialogLogger</code>.</p>
+    <p><span class="label">firstTime behaviour</span> — Stays true after this agent runs; the subsequent query still enters the full first-query flow (Task Z + DatePreprocessor + Task A).</p>
   </div>
 
   <div class="agent-card">
@@ -726,7 +792,7 @@
 
   <hr />
   <p style="color: var(--muted); font-size: 0.8rem; text-align: center;">
-    LeisurePlan · Agent Project · Generated 2026-02-20
+    LeisurePlan · Agent Project · Generated 2026-05-15
   </p>
 
 </div>
