@@ -236,6 +236,7 @@ const Sessions = () => {
                 </TableCell>
                 <TableCell><strong>Session Name</strong></TableCell>
                 <TableCell><strong>Timestamp</strong></TableCell>
+                <TableCell><strong>Session ID</strong></TableCell>
                 <TableCell><strong>Actions</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -258,6 +259,7 @@ const Sessions = () => {
                     {getSessionName(session)}
                   </TableCell>
                   <TableCell>{formatTimestamp(session.timestamp)}</TableCell>
+                  <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}>{session.sessionId?.slice(0, 8)}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <Button
