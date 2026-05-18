@@ -141,7 +141,16 @@ export async function fetchQueryStatus(sessionId, queryId, token) {
     headers: buildHeaders(token)
   });
   const text = await res.text();
-  if (!res.ok) throwOnError(res, text);
+  if (!res.ok) {
+    // Backend may return a terminal status (e.g. Timeout) with a non-2xx code — honour it.
+    try {
+      const body = JSON.parse(text);
+      if (body.status === 'Done' || body.status === 'Failed' || body.status === 'Timeout') {
+        return body;
+      }
+    } catch (_) {}
+    throwOnError(res, text);
+  }
   return JSON.parse(text);
 }
 

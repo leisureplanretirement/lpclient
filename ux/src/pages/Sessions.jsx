@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Chip,
   CircularProgress,
   Paper,
   Table,
@@ -55,6 +56,18 @@ const Sessions = () => {
     if (!timestamp) return 'N/A';
     const date = new Date(timestamp);
     return date.toLocaleString();
+  };
+
+  const statusChip = (status) => {
+    if (!status) return null;
+    const map = {
+      Done:    { color: 'success' },
+      Failed:  { color: 'error' },
+      Timeout: { color: 'warning' },
+      Working: { color: 'info' },
+    };
+    const cfg = map[status] ?? { color: 'default' };
+    return <Chip label={status} color={cfg.color} size="small" />;
   };
 
   const getSessionName = (session) => {
@@ -237,6 +250,7 @@ const Sessions = () => {
                 <TableCell><strong>Session Name</strong></TableCell>
                 <TableCell><strong>Timestamp</strong></TableCell>
                 <TableCell><strong>Session ID</strong></TableCell>
+                <TableCell><strong>Status</strong></TableCell>
                 <TableCell><strong>Actions</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -260,6 +274,7 @@ const Sessions = () => {
                   </TableCell>
                   <TableCell>{formatTimestamp(session.timestamp)}</TableCell>
                   <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}>{session.sessionId?.slice(0, 8)}</TableCell>
+                  <TableCell>{statusChip(session.lastStatus)}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <Button
