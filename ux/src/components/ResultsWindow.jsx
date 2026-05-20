@@ -286,21 +286,25 @@ const ResultsWindow = ({ images, tables, summaryHtml, queryId, sessionId, onDeta
                 <Box
                   sx={{
                     cursor: 'pointer',
-                    '&:hover': {
-                      opacity: 0.8,
-                    }
+                    '&:hover': { opacity: 0.8 },
                   }}
-                  onClick={() => window.open(img.src, '_blank')}
+                  onClick={() => {
+                    const blob = new Blob([img.html], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                  }}
                 >
-                  <img
-                    src={img.src}
-                    alt={img.alt || `Chart ${idx + 1}`}
-                    style={{
-                      width: '100%',
-                      height: 'auto',
-                      display: 'block',
-                    }}
-                  />
+                  {img.chartThumbnail && (
+                    <img
+                      src={img.chartThumbnail}
+                      alt={img.alt || `Chart ${idx + 1}`}
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        display: 'block',
+                      }}
+                    />
+                  )}
                 </Box>
                 {img.thumbnail && (
                   <>

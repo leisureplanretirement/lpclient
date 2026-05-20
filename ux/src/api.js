@@ -134,6 +134,26 @@ export async function fetchLatestChart(sessionId, chartType, token) {
   return blob;
 }
 
+// GET /api/Chat/ChartHtml?sessionId=...&queryId=...&chartType=...
+export async function fetchChartHtml(sessionId, queryId, chartType, token) {
+  const res = await fetch(`${API_BASE}/Chat/ChartHtml?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}&chartType=${encodeURIComponent(chartType)}`, {
+    headers: buildHeaders(token)
+  });
+  const html = await res.text();
+  if (!res.ok) throw new Error('Failed to load chart');
+  return html;
+}
+
+// GET /api/Chat/LatestChartHtml?sessionId=...&chartType=...
+export async function fetchLatestChartHtml(sessionId, chartType, token) {
+  const res = await fetch(`${API_BASE}/Chat/LatestChartHtml?sessionId=${encodeURIComponent(sessionId)}&chartType=${encodeURIComponent(chartType)}`, {
+    headers: buildHeaders(token)
+  });
+  const html = await res.text();
+  if (!res.ok) throw new Error('Failed to load latest chart');
+  return html;
+}
+
 // GET /api/chat/QueryStatus?sessionId=...&queryId=...
 // Returns { status, balanceUsd?, queryCostUsd? }
 export async function fetchQueryStatus(sessionId, queryId, token) {

@@ -12,12 +12,14 @@ import {
   InsufficientBalanceError,
   fetchAnnualTable,
   fetchChart,
+  fetchChartHtml,
   fetchChatDialog,
   fetchFlowsTable,
   fetchIsAdministrator,
   fetchLatestAnnualTable,
   postUserLogin,
   fetchLatestChart,
+  fetchLatestChartHtml,
   fetchLatestFlowsTable,
   fetchLatestSummaryTable,
   fetchQueryStatus,
@@ -106,8 +108,10 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const [results, setResults] = useState({ images: [], tables: [] });
   const [dialog, setDialog] = useState([]);
   const [retInputs, setRetInputs] = useState(null);
-  const [flowsUrl, setFlowsUrl] = useState(null);
-  const [balancesUrl, setBalancesUrl] = useState(null);
+  const [flowsHtml, setFlowsHtml] = useState(null);
+  const [balancesHtml, setBalancesHtml] = useState(null);
+  const [flowsThumbnail, setFlowsThumbnail] = useState(null);
+  const [balancesThumbnail, setBalancesThumbnail] = useState(null);
   const [summaryHtml, setSummaryHtml] = useState(null);
   const [queryStatus, setQueryStatus] = useState(null);
   const [pollCount, setPollCount] = useState(0);
@@ -367,22 +371,37 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       }
       // Charts
       try {
-        const flowsBlob = useLatest
-          ? await fetchLatestChart(sessId, 'Flows', token)
-          : await fetchChart(sessId, qId, 'Flows', token);
-        const flowsObjectUrl = URL.createObjectURL(flowsBlob);
-        setFlowsUrl(flowsObjectUrl);
+        const html = useLatest
+          ? await fetchLatestChartHtml(sessId, 'Flows', token)
+          : await fetchChartHtml(sessId, qId, 'Flows', token);
+        setFlowsHtml(html);
       } catch (err) {
-        setFlowsUrl(null);
+        setFlowsHtml(null);
       }
       try {
-        const balancesBlob = useLatest
+        const html = useLatest
+          ? await fetchLatestChartHtml(sessId, 'Balances', token)
+          : await fetchChartHtml(sessId, qId, 'Balances', token);
+        setBalancesHtml(html);
+      } catch (err) {
+        setBalancesHtml(null);
+      }
+      // Chart thumbnails (PNG)
+      try {
+        const blob = useLatest
+          ? await fetchLatestChart(sessId, 'Flows', token)
+          : await fetchChart(sessId, qId, 'Flows', token);
+        setFlowsThumbnail(URL.createObjectURL(blob));
+      } catch (err) {
+        setFlowsThumbnail(null);
+      }
+      try {
+        const blob = useLatest
           ? await fetchLatestChart(sessId, 'Balances', token)
           : await fetchChart(sessId, qId, 'Balances', token);
-        const balancesObjectUrl = URL.createObjectURL(balancesBlob);
-        setBalancesUrl(balancesObjectUrl);
+        setBalancesThumbnail(URL.createObjectURL(blob));
       } catch (err) {
-        setBalancesUrl(null);
+        setBalancesThumbnail(null);
       }
       // Summary table
       try {
@@ -609,8 +628,8 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         <ResultsWindow
           onEditField={(label, value) => setChatPrefill(`${label} = ${value}`)}
           images={[
-            flowsUrl ? { src: flowsUrl, alt: 'Flows Chart', detailsLink: sessionId && selectedQueryId ? `/api/Chat/FlowsTable?sessionId=${sessionId}&queryId=${selectedQueryId}` : null, thumbnail: '/MonthlyCashFlowAnalysis.png' } : null,
-            balancesUrl ? { src: balancesUrl, alt: 'Balances Chart', annualDetailsLink: sessionId && selectedQueryId ? true : false, thumbnail: '/AnnualCashFlowAnalysis.png' } : null,
+            flowsHtml ? { html: flowsHtml, alt: 'Flows Chart', detailsLink: sessionId && selectedQueryId ? `/api/Chat/FlowsTable?sessionId=${sessionId}&queryId=${selectedQueryId}` : null, chartThumbnail: flowsThumbnail, thumbnail: '/MonthlyCashFlowAnalysis.png' } : null,
+            balancesHtml ? { html: balancesHtml, alt: 'Balances Chart', annualDetailsLink: sessionId && selectedQueryId ? true : false, chartThumbnail: balancesThumbnail, thumbnail: '/AnnualCashFlowAnalysis.png' } : null,
           ].filter(Boolean)}
           tables={retInputs ? [
             {
