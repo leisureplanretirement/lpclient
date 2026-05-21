@@ -310,6 +310,8 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         if (e.balanceUsd !== null && e.balanceUsd !== undefined) onBalanceUpdate(e.balanceUsd);
       } else if (e instanceof ApiError && e.details) {
         setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Error: ' + e.message, errorDetails: e.details }]);
+      } else if (e instanceof TypeError) {
+        setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Connection error — the server may be unavailable or the request timed out. Please try again.' }]);
       } else {
         setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Error: ' + e.message }]);
       }
@@ -710,6 +712,8 @@ function App() {
   const theme = useMemo(() => createAppTheme(mode), [mode]);
   const [balance, setBalance] = useState(null);
   const [canceled, setCanceled] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeBalance, setWelcomeBalance] = useState(null);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [impersonation, setImpersonationState] = useState(() => {
@@ -733,6 +737,15 @@ function App() {
             if (e instanceof CanceledAccountError) setCanceled(true);
             else setIsAdmin(false);
           });
+        getBillingBalance(token)
+          .then(({ balanceUsd, isNewUser }) => {
+            setBalance(balanceUsd);
+            if (isNewUser) {
+              setWelcomeBalance(balanceUsd);
+              setWelcomeOpen(true);
+            }
+          })
+          .catch(() => {});
       });
     }
     if (!isLoading && !isAuthenticated) {
@@ -772,6 +785,17 @@ function App() {
         <CssBaseline />
         <Router>
           <CanceledRedirect canceled={canceled} />
+          <Dialog open={welcomeOpen} onClose={() => setWelcomeOpen(false)}>
+            <DialogTitle>Welcome to LeisurePlan!</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                You have ${welcomeBalance?.toFixed(2)} in free credit ready to use. Ask me anything about your retirement plan to get started.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setWelcomeOpen(false)} autoFocus>Get Started</Button>
+            </DialogActions>
+          </Dialog>
           <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
             <Banner canceled={canceled} />
             <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
