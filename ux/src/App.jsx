@@ -164,8 +164,10 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         setSelectedQueryId(null);
         setResults({ images: [], tables: [] });
         setRetInputs(null);
-        setFlowsUrl(null);
-        setBalancesUrl(null);
+        setFlowsHtml(null);
+        setBalancesHtml(null);
+        setFlowsThumbnail(null);
+        setBalancesThumbnail(null);
         setSummaryHtml(null);
         setDialog([]);
       }
@@ -272,8 +274,10 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       setSelectedQueryId(null);
       setResults({ images: [], tables: [] });
       setRetInputs(null);
-      setFlowsUrl(null);
-      setBalancesUrl(null);
+      setFlowsHtml(null);
+      setBalancesHtml(null);
+      setFlowsThumbnail(null);
+      setBalancesThumbnail(null);
       setSummaryHtml(null);
       setDialog([]);
       setQueryStatus(null);
@@ -463,8 +467,10 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
 
     // Clear existing results first to force re-render
     setRetInputs(null);
-    setFlowsUrl(null);
-    setBalancesUrl(null);
+    setFlowsHtml(null);
+    setBalancesHtml(null);
+    setFlowsThumbnail(null);
+    setBalancesThumbnail(null);
     setSummaryHtml(null);
 
     // Load results for the selected query
