@@ -6,10 +6,17 @@ const Help = () => {
       <Typography variant="h5" sx={{ mb: 3 }}>Help</Typography>
 
       <Typography variant="h6" sx={{ mb: 1 }}>Getting Started</Typography>
-      <Typography variant="body2" sx={{ mb: 3 }}>
+      <Typography variant="body2" sx={{ mb: 1 }}>
         LeisurePlan.App uses a conversational interface. Simply type a question or
         instruction in the chat box and the assistant will guide you through building
         your retirement plan.
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3 }}>
+        Not sure what to ask?{' '}
+        <Link href="/help/SampleQueries.html" target="_blank" rel="noopener noreferrer">
+          Browse sample queries
+        </Link>{' '}
+        for ideas across a range of retirement planning topics.
       </Typography>
 
       <Divider sx={{ my: 3 }} />

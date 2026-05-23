@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeisurePlan — Sample Queries</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      line-height: 1.6;
+      padding: 48px 24px 80px;
+    }
+
+    .page-header {
+      max-width: 900px;
+      margin: 0 auto 56px;
+      text-align: center;
+    }
+
+    .page-header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .page-header p {
+      font-size: 1.05rem;
+      color: #94a3b8;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .section {
+      max-width: 900px;
+      margin: 0 auto 52px;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-label .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .section-label h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: #1e2433;
+      border: 1px solid #2d3748;
+      border-radius: 14px;
+      padding: 20px 22px;
+      cursor: default;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .card:hover {
+      border-color: #4a6fa5;
+      background: #232d42;
+    }
+
+    .card .query {
+      font-size: 0.97rem;
+      color: #e2e8f0;
+      line-height: 1.55;
+    }
+
+    .card .tag {
+      display: inline-block;
+      margin-top: 14px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 99px;
+    }
+
+    /* Category colour themes */
+    .cat-start   .icon { background: #1a3a2e; color: #4ade80; }
+    .cat-start   .tag  { background: #1a3a2e; color: #4ade80; }
+
+    .cat-income  .icon { background: #1e3a5f; color: #60a5fa; }
+    .cat-income  .tag  { background: #1e3a5f; color: #60a5fa; }
+
+    .cat-accounts .icon { background: #2d1f5e; color: #a78bfa; }
+    .cat-accounts .tag  { background: #2d1f5e; color: #a78bfa; }
+
+    .cat-tax     .icon { background: #3b2a1a; color: #fb923c; }
+    .cat-tax     .tag  { background: #3b2a1a; color: #fb923c; }
+
+    .cat-medicare .icon { background: #1f3a3a; color: #2dd4bf; }
+    .cat-medicare .tag  { background: #1f3a3a; color: #2dd4bf; }
+
+    .cat-inflation .icon { background: #3a2a1a; color: #fbbf24; }
+    .cat-inflation .tag  { background: #3a2a1a; color: #fbbf24; }
+
+    .cat-rmd     .icon { background: #3a1f2d; color: #f472b6; }
+    .cat-rmd     .tag  { background: #3a1f2d; color: #f472b6; }
+
+    .cat-whatif  .icon { background: #1a2a3a; color: #38bdf8; }
+    .cat-whatif  .tag  { background: #1a2a3a; color: #38bdf8; }
+
+    .divider {
+      max-width: 900px;
+      margin: 0 auto 52px;
+      border: none;
+      border-top: 1px solid #2d3748;
+    }
+
+    @media (max-width: 600px) {
+      .cards { grid-template-columns: 1fr; }
+      .page-header h1 { font-size: 1.6rem; }
+    }
+
+    .disclaimer {
+      max-width: 900px;
+      margin: 52px auto 0;
+      border-top: 1px solid #2d3748;
+      padding-top: 16px;
+      font-size: 0.82rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>LeisurePlan Sample Queries</h1>
+    <p>Examples of questions you can ask the retirement planning assistant, organised by capability area.</p>
+  </div>
+
+  <!-- ── GETTING STARTED ───────────────────────────────────── -->
+  <div class="section cat-start">
+    <div class="section-label">
+      <div class="icon">🚀</div>
+      <h2>Getting Started</h2>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="query">I'm 62 years old, married filing jointly, and planning to retire at 65. I have $400,000 in a 401(k), $150,000 in a Roth IRA, and $80,000 in savings. My wife and I expect $3,200/month from Social Security starting at 67. Our monthly expenses are about $5,500. Will our money last to age 90?</div>
+        <span class="tag">Full scenario</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I'm 67 and just retired. I have $600,000 in a traditional IRA and $2,800/month in Social Security already started. I spend about $4,800/month. How long will my savings last?</div>
+        <span class="tag">Simple baseline</span>
+      </div>
+
+      <div class="card">
+        <div class="query">Can you run a basic retirement projection for a 65-year-old single filer with $500,000 total savings — half in an IRA, half in a taxable account — and Social Security of $2,200/month? Living expenses are $4,000/month.</div>
+        <span class="tag">Quick start</span>
+      </div>
+
+    </div>
+  </div>
+  <hr class="divider" />
+
+  <!-- ── INCOME SOURCES ────────────────────────────────────── -->
+  <div class="section cat-income">
+    <div class="section-label">
+      <div class="icon">💵</div>
+      <h2>Income Sources</h2>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="query">I plan to work part-time until age 68, earning $18,000 a year. How does that change the longevity of my portfolio compared to retiring fully at 65?</div>
+        <span class="tag">Part-time work</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I receive $1,500/month in rental income from a property I own. Please include that in my projection and show how it affects my annual taxes.</div>
+        <span class="tag">Rental income</span>
+      </div>
+
+      <div class="card">
+        <div class="query">My wife starts Social Security at 62 at a reduced benefit of $1,400/month, and I delay mine to 70 to get $3,600/month. Show me the combined income picture and how it affects our withdrawal needs over time.</div>
+        <span class="tag">Social Security timing</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I have a small pension of $800/month that starts at 65 and doesn't have a COLA adjustment. Please factor that into the simulation alongside my Social Security.</div>
+        <span class="tag">Fixed pension</span>
+      </div>
+
+      <div class="card">
+        <div class="query">What happens if Social Security's COLA averages only 1.5% instead of the default 2.5%? Show how that difference compounds over a 25-year retirement.</div>
+        <span class="tag">COLA sensitivity</span>
+      </div>
+
+    </div>
+  </div>
+  <hr class="divider" />
+
+  <!-- ── ACCOUNTS & WITHDRAWALS ────────────────────────────── -->
+  <div class="section cat-accounts">
+    <div class="section-label">
+      <div class="icon">🏦</div>
+      <h2>Accounts &amp; Withdrawal Strategy</h2>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="query">I have $300,000 in a traditional IRA, $150,000 in a Roth IRA, and $100,000 in a taxable brokerage account with a cost basis of $60,000. How does the system decide which account to draw from first, and what's my projected tax bill each year?</div>
+        <span class="tag">Withdrawal order</span>
+      </div>
+
+      <div class="card">
+        <div class="query">My taxable savings account has grown significantly — the balance is $250,000 but my cost basis is only $90,000. How does the simulator handle capital gains taxes when I withdraw from that account?</div>
+        <span class="tag">Capital gains</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I expect my market return to be 4% rather than the default 5% — I'm invested mostly in bonds. How much does that lower return shorten my runway?</div>
+        <span class="tag">Rate of return</span>
+      </div>
+
+      <div class="card">
+        <div class="query">Run two scenarios side by side: one where I keep my current asset mix earning 5%, and one where I shift to a more conservative 3.5% return. Which one runs out of money first?</div>
+        <span class="tag">Scenario comparison</span>
+      </div>
+
+    </div>
+  </div>
+  <hr class="divider" />
+
+  <!-- ── TAXES ─────────────────────────────────────────────── -->
+  <div class="section cat-tax">
+    <div class="section-label">
+      <div class="icon">📋</div>
+      <h2>Tax Planning</h2>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="query">What percentage of my Social Security benefit will be taxable each year, and how does that change as I draw down my IRA?</div>
+        <span class="tag">SS benefit taxation</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I have a mortgage with $2,800/month in payments and pay $7,500/year in property taxes. Will I be better off itemising or taking the standard deduction? Show me both options.</div>
+        <span class="tag">Itemised vs. standard</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I live in a state with a 5% flat income tax. How does that affect my total annual tax burden compared to federal taxes alone?</div>
+        <span class="tag">State income tax</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I donate about $4,000 a year to charity. Can the simulation include that as an itemised deduction and show how it reduces my taxable income over time?</div>
+        <span class="tag">Charitable deduction</span>
+      </div>
+
+      <div class="card">
+        <div class="query">Show me my projected AGI, taxable income, federal tax, and effective tax rate for each year of the simulation in a table.</div>
+        <span class="tag">Annual tax summary</span>
+      </div>
+
+    </div>
+  </div>
+  <hr class="divider" />
+
+  <!-- ── MEDICARE ───────────────────────────────────────────── -->
+  <div class="section cat-medicare">
+    <div class="section-label">
+      <div class="icon">🏥</div>
+      <h2>Medicare &amp; Healthcare Costs</h2>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="query">I turn 65 next year. How much should I budget for Original Medicare — Part B, Part D, and a Medigap Plan G supplement — versus enrolling in a Medicare Advantage plan? Break it down year by year.</div>
+        <span class="tag">Medicare options</span>
+      </div>
+
+      <div class="card">
+        <div class="query">My income two years ago was $210,000 because I sold a property. Will that trigger an IRMAA surcharge on my Medicare premiums this year, and how much will it add?</div>
+        <span class="tag">IRMAA surcharge</span>
+      </div>
+
+      <div class="card">
+        <div class="query">Healthcare costs are my biggest concern. What happens if medical inflation runs at 6% instead of the default 4.9%? Show the impact on my total spending and portfolio longevity.</div>
+        <span class="tag">Medical inflation</span>
+      </div>
+
+      <div class="card">
+        <div class="query">Can you show me a breakdown of my projected Medicare costs — Part B premium, IRMAA, Part D, Medigap, and annual deductible — for each year from age 65 to 85?</div>
+        <span class="tag">Medicare cost detail</span>
+      </div>
+
+    </div>
+  </div>
+  <hr class="divider" />
+
+  <!-- ── INFLATION ──────────────────────────────────────────── -->
+  <div class="section cat-inflation">
+    <div class="section-label">
+      <div class="icon">📈</div>
+      <h2>Inflation &amp; Spending</h2>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="query">My general living expenses grow with inflation, but my mortgage payment is fixed. Please model my mortgage separately so it doesn't inflate, while my other expenses grow at 2.5% per year.</div>
+        <span class="tag">Per-expense inflation</span>
+      </div>
+
+      <div class="card">
+        <div class="query">What if inflation averages 4% instead of 2.5% for the next 20 years? How much earlier does my portfolio run out?</div>
+        <span class="tag">Inflation stress test</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I expect to spend $8,000 on a home repair project in two years and another $15,000 on a car in five years. Can you add those as one-off expenses and show how they affect my balance chart?</div>
+        <span class="tag">One-off expenses</span>
+      </div>
+
+      <div class="card">
+        <div class="query">My travel budget is $6,000/year now, but I expect to cut that in half after age 75 as I slow down. Can you model that phase-down in spending?</div>
+        <span class="tag">Spending phase-down</span>
+      </div>
+
+    </div>
+  </div>
+  <hr class="divider" />
+
+  <!-- ── RMDs ──────────────────────────────────────────────── -->
+  <div class="section cat-rmd">
+    <div class="section-label">
+      <div class="icon">📅</div>
+      <h2>Required Minimum Distributions</h2>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="query">When do my RMDs start, and how much will I be required to withdraw each year? Show me a schedule from my first RMD through age 90.</div>
+        <span class="tag">RMD schedule</span>
+      </div>
+
+      <div class="card">
+        <div class="query">My IRA balance is $800,000 today and I'm 68. How large will my RMDs be when they start, and what tax bracket will those distributions push me into?</div>
+        <span class="tag">RMD tax impact</span>
+      </div>
+
+      <div class="card">
+        <div class="query">My RMDs will be larger than my spending needs. What happens to the surplus cash — does it flow back into my taxable savings account?</div>
+        <span class="tag">RMD surplus</span>
+      </div>
+
+    </div>
+  </div>
+  <hr class="divider" />
+
+  <!-- ── WHAT-IF ─────────────────────────────────────────────── -->
+  <div class="section cat-whatif">
+    <div class="section-label">
+      <div class="icon">🔀</div>
+      <h2>What-If Scenarios</h2>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="query">What's the minimum monthly spending I can sustain through age 95 given my current savings and income, assuming a 5% market return and 2.5% inflation?</div>
+        <span class="tag">Spending ceiling</span>
+      </div>
+
+      <div class="card">
+        <div class="query">If I retire two years earlier at 63 instead of 65, how much more do I need to save to reach the same outcome? Show both scenarios.</div>
+        <span class="tag">Early retirement</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I'm considering paying off my $180,000 mortgage immediately using savings instead of making monthly payments for the next 12 years. Which option leaves me in better financial shape at age 85?</div>
+        <span class="tag">Pay off mortgage</span>
+      </div>
+
+      <div class="card">
+        <div class="query">What happens if I live to 100? Is there a scenario where my current savings plan still covers me, and what changes would make it work?</div>
+        <span class="tag">Longevity risk</span>
+      </div>
+
+      <div class="card">
+        <div class="query">Run a pessimistic scenario: 3% market return, 4% general inflation, 7% medical inflation, and Social Security COLA of only 1%. How does that compare to the base case?</div>
+        <span class="tag">Stress test</span>
+      </div>
+
+      <div class="card">
+        <div class="query">I'm thinking about selling my rental property, which would give me an extra $200,000 in cash but eliminate my $1,500/month rental income. Which choice extends my portfolio further?</div>
+        <span class="tag">Asset trade-off</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This page is for educational purposes only and is not financial, tax, or legal advice. Projections are based on assumptions you provide and may not reflect actual future conditions. Consult a qualified financial advisor, tax professional, or attorney before making retirement decisions.
+  </div>
+
+</body>
+</html>
