@@ -4,8 +4,8 @@ import { Box, CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar } from '@mui/material';
 import { Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { Snackbar, Alert, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import {
   ApiError,
   CanceledAccountError,
@@ -17,7 +17,6 @@ import {
   fetchFlowsTable,
   fetchIsAdministrator,
   fetchLatestAnnualTable,
-  postUserLogin,
   fetchLatestChart,
   fetchLatestChartHtml,
   fetchLatestFlowsTable,
@@ -26,13 +25,16 @@ import {
   fetchRetirementInputs,
   fetchSummaryTable,
   getBillingBalance,
+  postUserLogin,
   sendMessage
 } from './api';
+import { ColorModeContext } from './ColorModeContext';
 import Banner from './components/Banner';
 import ChatWindow from './components/ChatWindow';
+import CookieNotice from './components/CookieNotice';
 import LowBalanceBanner from './components/LowBalanceBanner';
 import PollingProgressBar from './components/PollingProgressBar';
-import ResultsWindow from './components/ResultsWindow';
+import { ImpersonationContext, useImpersonation } from './ImpersonationContext';
 import About from './pages/About';
 import AccountCanceled from './pages/AccountCanceled';
 import Admin from './pages/Admin';
@@ -44,9 +46,6 @@ import PostVerify from './pages/PostVerify';
 import Privacy from './pages/Privacy';
 import Sessions from './pages/Sessions';
 import Settings from './pages/Settings';
-import CookieNotice from './components/CookieNotice';
-import { ColorModeContext } from './ColorModeContext';
-import { ImpersonationContext, useImpersonation } from './ImpersonationContext';
 import { createAppTheme } from './theme';
 
 
@@ -124,6 +123,8 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const hasLoadedSessionRef = useRef(false);
   const [lowBalance, setLowBalance] = useState(false);
   const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeBalance, setWelcomeBalance] = useState(null);
   const [authError, setAuthError] = useState(null);
   const [loadedQueryHistory, setLoadedQueryHistory] = useState([]);
   const [chatPrefill, setChatPrefill] = useState('');
@@ -172,15 +173,23 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         setDialog([]);
       }
 
-      // User logged in - update welcome message
+      // User logged in - update welcome message and check for new user
       if (!prevAuth && currentAuth) {
         setMessages((msgs) => {
-          // If only welcome message exists, update it
           if (msgs.length === 1 && msgs[0].sender === 'agent') {
             return [{ sender: 'agent', text: getWelcomeMessage(true) }];
           }
-          return msgs; // Preserve any existing conversation
+          return msgs;
         });
+        getAccessTokenSilently().then(token =>
+          getBillingBalance(token).then(({ balanceUsd, isNewUser }) => {
+            onBalanceUpdate(balanceUsd);
+            if (isNewUser) {
+              setWelcomeBalance(balanceUsd);
+              setWelcomeOpen(true);
+            }
+          })
+        ).catch(() => {});
       }
 
       prevAuthRef.current = currentAuth;
@@ -195,25 +204,25 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       }
 
       // Check if we have session data from navigation
-      if (location.state?.sessionId && location.state?.queryId) {
+      if (location.state?.sessionId) {
         hasLoadedSessionRef.current = true;
         const { sessionId: loadSessionId, queryId: loadQueryId } = location.state;
 
-        // Set the session and query IDs
         setSessionId(loadSessionId);
-        setQueryId(loadQueryId);
-        setSelectedQueryId(loadQueryId);
-        isNewQueryRef.current = false; // This is a loaded session, not a new query
+        isNewQueryRef.current = false;
 
-        // Load the session data
+        if (loadQueryId) {
+          setQueryId(loadQueryId);
+          setSelectedQueryId(loadQueryId);
+        }
+
         try {
-          await loadResults(loadSessionId, loadQueryId);
+          if (loadQueryId) {
+            await loadResults(loadSessionId, loadQueryId);
+          }
 
-          // Fetch structured dialog messages
           const token = await getAccessTokenSilently();
           const dialogMessages = await fetchChatDialog(loadSessionId, token);
-
-          // Normalize API response to match UI expectations
           const normalizedMessages = normalizeDialogMessages(dialogMessages);
           setMessages(normalizedMessages);
           setLoadedQueryHistory(normalizedMessages.filter(m => m.sender === 'user').map(m => m.text));
@@ -526,42 +535,8 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
     window.open(`/admin?sessionId=${encodeURIComponent(adminSessionId)}&queryId=${encodeURIComponent(adminQueryId)}`, '_blank');
   };
 
-  // Draggable divider state
-  const [splitPercent, setSplitPercent] = useState(50);
-  const draggingRef = useRef(false);
-  const containerRef = useRef(null);
-
-  const handleMouseDown = useCallback((e) => {
-    e.preventDefault();
-    draggingRef.current = true;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  }, []);
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!draggingRef.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const percent = ((e.clientX - rect.left) / rect.width) * 100;
-      setSplitPercent(Math.min(Math.max(percent, 20), 80));
-    };
-    const handleMouseUp = () => {
-      if (draggingRef.current) {
-        draggingRef.current = false;
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-      }
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
-
   return (
-    <Box ref={containerRef} sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       <Snackbar
         open={paymentSuccessOpen}
         autoHideDuration={6000}
@@ -572,6 +547,24 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
           Payment successful — your balance has been updated.
         </Alert>
       </Snackbar>
+
+      <Dialog open={welcomeOpen} onClose={() => setWelcomeOpen(false)}>
+        <DialogTitle>Welcome to LeisurePlan!</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You have ${welcomeBalance?.toFixed(2)} in free credit ready to use. You should get about 20 queries/dollar.
+          </DialogContentText>
+          <DialogContentText sx={{ mt: 2 }}>
+            To get started, ask me anything about planning for retirement. See the <a href="/help">Help page</a> for examples.
+          </DialogContentText>
+          <DialogContentText sx={{ mt: 2 }}>
+            Or you can ask what the app itself what it can do.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setWelcomeOpen(false)} autoFocus>Get Started</Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={!!authError} onClose={() => setAuthError(null)}>
         <DialogTitle>Login Failed</DialogTitle>
@@ -586,14 +579,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         </DialogActions>
       </Dialog>
 
-      {/* Column 1: Chat */}
-      <Box sx={{
-        width: `${splitPercent}%`,
-        flexShrink: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden'
-      }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <PollingProgressBar pollCount={pollCount} maxPolls={maxPolls} loading={queryStatus === 'Working'} />
         {lowBalance && <LowBalanceBanner />}
         <ChatWindow
@@ -613,93 +599,6 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
           onPrefillConsumed={() => setChatPrefill('')}
         />
       </Box>
-
-      {/* Draggable Divider */}
-      <Box
-        onMouseDown={handleMouseDown}
-        sx={{
-          width: 6,
-          flexShrink: 0,
-          cursor: 'col-resize',
-          backgroundColor: 'divider',
-          '&:hover': { backgroundColor: 'action.selected' },
-        }}
-      />
-
-      {/* Column 2: Results */}
-      <Box sx={{
-        flex: 1,
-        overflow: 'auto',
-        p: 2,
-        backgroundColor: 'background.default'
-      }}>
-        <ResultsWindow
-          onEditField={(label, value) => setChatPrefill(`${label} = ${value}`)}
-          images={[
-            flowsHtml ? { html: flowsHtml, alt: 'Flows Chart', detailsLink: sessionId && selectedQueryId ? `/api/Chat/FlowsTable?sessionId=${sessionId}&queryId=${selectedQueryId}` : null, chartThumbnail: flowsThumbnail, thumbnail: '/MonthlyCashFlowAnalysis.png' } : null,
-            balancesHtml ? { html: balancesHtml, alt: 'Balances Chart', annualDetailsLink: sessionId && selectedQueryId ? true : false, chartThumbnail: balancesThumbnail, thumbnail: '/AnnualCashFlowAnalysis.png' } : null,
-          ].filter(Boolean)}
-          tables={retInputs ? [
-            {
-              title: 'Retiree Personal Data',
-              headers: ['Field', 'Value'],
-              rows: retInputs.retirementPlanningSimulationInputs?.retireePersonalData ? Object.entries(retInputs.retirementPlanningSimulationInputs.retireePersonalData) : [],
-              sideBySide: true,
-              rowGroup: 0
-            },
-            {
-              title: 'Simulation Settings and Assumptions',
-              headers: ['Setting', 'Value'],
-              rows: retInputs.simulationSettingsAndAssumptionsDto ? formatEntries({
-                ...Object.fromEntries(Object.entries(retInputs.simulationSettingsAndAssumptionsDto).filter(([k]) => !['annualMedicalInflationRate', 'marketROR', 'annualInflationRate', 'socialSecurityColaRate'].includes(k))),
-                ...Object.fromEntries(Object.entries(retInputs.retirementPlanningSimulationInputs?.investorAssumptions ?? {}).filter(([k]) => k === 'stateIncomeTaxRate')),
-              }) : [],
-              sideBySide: true,
-              rowGroup: 0
-            },
-            {
-              title: 'Investor Assumptions',
-              headers: ['Setting', 'Value'],
-              rows: (() => {
-                const ia = retInputs.retirementPlanningSimulationInputs?.investorAssumptions ?? {};
-                const ss = retInputs.simulationSettingsAndAssumptionsDto ?? {};
-                const moved = Object.fromEntries(
-                  Object.entries(ss).filter(([k]) => ['marketROR', 'annualInflationRate', 'socialSecurityColaRate'].includes(k))
-                );
-                const filtered = Object.fromEntries(
-                  Object.entries(ia).filter(([k]) => !['medicareDeductible', 'medigapPartGPremium', 'medicareStartDate', 'stateIncomeTaxRate'].includes(k))
-                );
-                return formatEntries({ ...filtered, ...moved });
-              })(),
-              sideBySide: true,
-              rowGroup: 1
-            },
-            {
-              title: 'Medical',
-              headers: ['Setting', 'Value'],
-              rows: (() => {
-                const ia = retInputs.retirementPlanningSimulationInputs?.investorAssumptions;
-                const ss = retInputs.simulationSettingsAndAssumptionsDto;
-                return [
-                  ['Annual Medical Inflation Rate', ss?.annualMedicalInflationRate != null ? `${(ss.annualMedicalInflationRate * 100).toFixed(1)}%` : ''],
-                  ['Medicare Deductible', ia?.medicareDeductible ?? ''],
-                  ['Medigap Part G Premium', ia?.medigapPartGPremium ?? ''],
-                  ['Medicare Start Date', ia?.medicareStartDate ?? ''],
-                ];
-              })(),
-              sideBySide: true,
-              rowGroup: 1
-            },
-          ] : []}
-          summaryHtml={summaryHtml}
-          queryId={selectedQueryId || queryId}
-          sessionId={sessionId}
-          onDetailsClick={handleDetailsClick}
-          onAnnualDetailsClick={handleAnnualDetailsClick}
-          isAdmin={isAdmin}
-          onAdminClick={handleAdminClick}
-        />
-      </Box>
     </Box>
   );
 }
@@ -712,8 +611,6 @@ function App() {
   const theme = useMemo(() => createAppTheme(mode), [mode]);
   const [balance, setBalance] = useState(null);
   const [canceled, setCanceled] = useState(false);
-  const [welcomeOpen, setWelcomeOpen] = useState(false);
-  const [welcomeBalance, setWelcomeBalance] = useState(null);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [impersonation, setImpersonationState] = useState(() => {
@@ -737,15 +634,6 @@ function App() {
             if (e instanceof CanceledAccountError) setCanceled(true);
             else setIsAdmin(false);
           });
-        getBillingBalance(token)
-          .then(({ balanceUsd, isNewUser }) => {
-            setBalance(balanceUsd);
-            if (isNewUser) {
-              setWelcomeBalance(balanceUsd);
-              setWelcomeOpen(true);
-            }
-          })
-          .catch(() => {});
       });
     }
     if (!isLoading && !isAuthenticated) {
@@ -785,17 +673,7 @@ function App() {
         <CssBaseline />
         <Router>
           <CanceledRedirect canceled={canceled} />
-          <Dialog open={welcomeOpen} onClose={() => setWelcomeOpen(false)}>
-            <DialogTitle>Welcome to LeisurePlan!</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                You have ${welcomeBalance?.toFixed(2)} in free credit ready to use. Ask me anything about your retirement plan to get started.
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setWelcomeOpen(false)} autoFocus>Get Started</Button>
-            </DialogActions>
-          </Dialog>
+
           <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
             <Banner canceled={canceled} />
             <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
