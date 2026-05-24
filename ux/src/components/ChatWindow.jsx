@@ -83,7 +83,7 @@ const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTa
               <Box
                 onClick={() => setInputsOpen(o => !o)}
                 sx={{
-                  width: 180,
+                  width: 90,
                   height: 90,
                   display: 'flex',
                   flexDirection: 'column',
@@ -116,7 +116,7 @@ const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTa
                   window.open(URL.createObjectURL(blob), '_blank');
                 }}
               >
-                <img src={img.chartThumbnail} alt={img.alt} style={{ width: 180, height: 'auto', display: 'block', borderRadius: 4 }} />
+                <img src={img.chartThumbnail} alt={img.alt} style={{ width: 90, height: 'auto', display: 'block', borderRadius: 4 }} />
               </Box>
             </Box>
           ))}
@@ -132,7 +132,7 @@ const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTa
                 <img
                   src={img.tableThumbnail}
                   alt={img.tableLabel}
-                  style={{ width: 180, height: 'auto', display: 'block', border: `1px solid ${theme.palette.divider}`, borderRadius: 4 }}
+                  style={{ width: 90, height: 'auto', display: 'block', border: `1px solid ${theme.palette.divider}`, borderRadius: 4 }}
                 />
               </Box>
             </Box>
@@ -145,7 +145,7 @@ const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTa
               <Box
                 onClick={() => setSummaryOpen(o => !o)}
                 sx={{
-                  width: 180,
+                  width: 90,
                   height: 90,
                   display: 'flex',
                   flexDirection: 'column',
@@ -401,7 +401,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
                   <Box sx={{
                     '& table': {
                       borderCollapse: 'collapse',
-                      width: '100%',
+                      width: 'auto',
                       marginTop: 1,
                       marginBottom: 1,
                       fontSize: '0.75rem'
