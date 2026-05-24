@@ -16,10 +16,6 @@ import {
   fetchChatDialog,
   fetchFlowsTable,
   fetchIsAdministrator,
-  fetchLatestAnnualTable,
-  fetchLatestChart,
-  fetchLatestChartHtml,
-  fetchLatestSummaryTable,
   fetchQueryStatus,
   fetchRetirementInputs,
   fetchSummaryTable,
@@ -325,7 +321,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
           if (statusData.balanceUsd !== null && statusData.balanceUsd !== undefined) {
             onBalanceUpdate(statusData.balanceUsd);
           }
-          const artifactData = await loadResults(sessId, qId, true);
+          const artifactData = await loadResults(sessId, qId);
           await updateMessagesFromDialog(sessId, qId);
           const artifacts = buildArtifacts(artifactData);
           if (artifacts.images.length > 0 || artifacts.summaryHtml) {
@@ -348,46 +344,24 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   };
 
   // Load result data (charts and inputs) for a specific query.
-  // useLatest: if true, use LatestChart/LatestFlowsTable endpoints (no queryId needed).
   // Returns a plain data object; does NOT update state directly.
-  const loadResults = async (sessId, qId, useLatest = false) => {
+  const loadResults = async (sessId, qId) => {
     const data = {};
     try {
       const token = await getAccessTokenSilently();
-      console.log('[loadResults] retInputs: fetchRetirementInputs', { sessId, qId });
+      console.log('[loadResults]', { sessId, qId });
       try { data.retInputs = await fetchRetirementInputs(sessId, qId, token); } catch {}
-      console.log('[loadResults] flowsHtml:', useLatest ? 'fetchLatestChartHtml(Flows)' : 'fetchChartHtml(Flows)', useLatest ? { sessId } : { sessId, qId });
+      try { data.flowsHtml = await fetchChartHtml(sessId, qId, 'Flows', token); } catch {}
+      try { data.balancesHtml = await fetchChartHtml(sessId, qId, 'Balances', token); } catch {}
       try {
-        data.flowsHtml = useLatest
-          ? await fetchLatestChartHtml(sessId, 'Flows', token)
-          : await fetchChartHtml(sessId, qId, 'Flows', token);
-      } catch {}
-      console.log('[loadResults] balancesHtml:', useLatest ? 'fetchLatestChartHtml(Balances)' : 'fetchChartHtml(Balances)', useLatest ? { sessId } : { sessId, qId });
-      try {
-        data.balancesHtml = useLatest
-          ? await fetchLatestChartHtml(sessId, 'Balances', token)
-          : await fetchChartHtml(sessId, qId, 'Balances', token);
-      } catch {}
-      console.log('[loadResults] flowsThumbnail:', useLatest ? 'fetchLatestChart(Flows)' : 'fetchChart(Flows)', useLatest ? { sessId } : { sessId, qId });
-      try {
-        const blob = useLatest
-          ? await fetchLatestChart(sessId, 'Flows', token)
-          : await fetchChart(sessId, qId, 'Flows', token);
+        const blob = await fetchChart(sessId, qId, 'Flows', token);
         data.flowsThumbnail = URL.createObjectURL(blob);
       } catch {}
-      console.log('[loadResults] balancesThumbnail:', useLatest ? 'fetchLatestChart(Balances)' : 'fetchChart(Balances)', useLatest ? { sessId } : { sessId, qId });
       try {
-        const blob = useLatest
-          ? await fetchLatestChart(sessId, 'Balances', token)
-          : await fetchChart(sessId, qId, 'Balances', token);
+        const blob = await fetchChart(sessId, qId, 'Balances', token);
         data.balancesThumbnail = URL.createObjectURL(blob);
       } catch {}
-      console.log('[loadResults] summaryHtml:', useLatest ? 'fetchLatestSummaryTable' : 'fetchSummaryTable', useLatest ? { sessId } : { sessId, qId });
-      try {
-        data.summaryHtml = useLatest
-          ? await fetchLatestSummaryTable(sessId, token)
-          : await fetchSummaryTable(sessId, qId, token);
-      } catch {}
+      try { data.summaryHtml = await fetchSummaryTable(sessId, qId, token); } catch {}
     } catch {}
     return data;
   };
@@ -523,16 +497,10 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   };
 
   // Open the Annual Details table for a specific query in a new tab.
-  // Falls back to the Latest endpoint if the specific queryId returns 404.
   const handleOpenAnnualTable = async (qId) => {
     try {
       const token = await getAccessTokenSilently();
-      let html;
-      try {
-        html = await fetchAnnualTable(sessionId, qId, token);
-      } catch {
-        html = await fetchLatestAnnualTable(sessionId, token);
-      }
+      const html = await fetchAnnualTable(sessionId, qId, token);
       const w = window.open('', '_blank');
       if (w) { w.document.write(html); w.document.close(); }
     } catch (e) {

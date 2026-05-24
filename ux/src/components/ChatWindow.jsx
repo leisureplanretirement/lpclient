@@ -73,8 +73,8 @@ const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTa
 
   return (
     <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-      {/* Chart thumbnails and Annual Details table — all in one row */}
-      {images && images.length > 0 && (
+      {/* Thumbnail row — always shown when there are inputs; chart/table/summary thumbnails only when their data loaded */}
+      {(hasInputs || images?.length > 0 || summaryHtml) && (
         <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 2, mb: summaryHtml ? 2 : 0 }}>
           {/* Inputs & Assumptions thumbnail card */}
           {hasInputs && (
