@@ -16,10 +16,8 @@ import {
   fetchChatDialog,
   fetchFlowsTable,
   fetchIsAdministrator,
-  fetchLatestAnnualTable,
   fetchLatestChart,
   fetchLatestChartHtml,
-  fetchLatestFlowsTable,
   fetchLatestSummaryTable,
   fetchQueryStatus,
   fetchRetirementInputs,
@@ -104,14 +102,6 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [queryId, setQueryId] = useState(null);
-  const [results, setResults] = useState({ images: [], tables: [] });
-  const [dialog, setDialog] = useState([]);
-  const [retInputs, setRetInputs] = useState(null);
-  const [flowsHtml, setFlowsHtml] = useState(null);
-  const [balancesHtml, setBalancesHtml] = useState(null);
-  const [flowsThumbnail, setFlowsThumbnail] = useState(null);
-  const [balancesThumbnail, setBalancesThumbnail] = useState(null);
-  const [summaryHtml, setSummaryHtml] = useState(null);
   const [queryStatus, setQueryStatus] = useState(null);
   const [pollCount, setPollCount] = useState(0);
   const [maxPolls] = useState(300);
@@ -163,14 +153,6 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         setSessionId(null);
         setQueryId(null);
         setSelectedQueryId(null);
-        setResults({ images: [], tables: [] });
-        setRetInputs(null);
-        setFlowsHtml(null);
-        setBalancesHtml(null);
-        setFlowsThumbnail(null);
-        setBalancesThumbnail(null);
-        setSummaryHtml(null);
-        setDialog([]);
       }
 
       // User logged in - update welcome message and check for new user
@@ -217,14 +199,17 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         }
 
         try {
-          if (loadQueryId) {
-            await loadResults(loadSessionId, loadQueryId);
-          }
+          const artifactData = loadQueryId ? await loadResults(loadSessionId, loadQueryId) : {};
 
           const token = await getAccessTokenSilently();
           const dialogMessages = await fetchChatDialog(loadSessionId, token);
           const normalizedMessages = normalizeDialogMessages(dialogMessages);
-          setMessages(normalizedMessages);
+          const builtArtifacts = buildArtifacts(artifactData);
+          setMessages(normalizedMessages.map(msg =>
+            (msg.sender === 'agent' && msg.queryId === loadQueryId)
+              ? { ...msg, artifacts: builtArtifacts }
+              : msg
+          ));
           setLoadedQueryHistory(normalizedMessages.filter(m => m.sender === 'user').map(m => m.text));
         } catch (e) {
           setMessages([
@@ -281,14 +266,6 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       setSessionId(null);
       setQueryId(null);
       setSelectedQueryId(null);
-      setResults({ images: [], tables: [] });
-      setRetInputs(null);
-      setFlowsHtml(null);
-      setBalancesHtml(null);
-      setFlowsThumbnail(null);
-      setBalancesThumbnail(null);
-      setSummaryHtml(null);
-      setDialog([]);
       setQueryStatus(null);
       hasLoadedSessionRef.current = false;
       isNewQueryRef.current = false;
@@ -342,21 +319,19 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         const status = statusData.status;
         setQueryStatus(status);
         if (status === 'Working' || status === 'Preprocessing') {
-          // Update dialog while working
-          try {
-            const dialogMessages = await fetchChatDialog(sessId, token);
-            const normalizedMessages = normalizeDialogMessages(dialogMessages);
-            setDialog(normalizedMessages);
-          } catch (err) {
-            // Ignore dialog fetch errors while working
-          }
           if (currentPoll < maxPolls) setTimeout(poll, 1000);
         } else if (status === 'Done') {
           if (statusData.balanceUsd !== null && statusData.balanceUsd !== undefined) {
             onBalanceUpdate(statusData.balanceUsd);
           }
-          await loadResults(sessId, qId, true); // Use latest endpoints for new query
+          const artifactData = await loadResults(sessId, qId, true);
           await updateMessagesFromDialog(sessId, qId);
+          const artifacts = buildArtifacts(artifactData);
+          if (artifacts.images.length > 0 || artifacts.summaryHtml) {
+            setMessages(msgs => msgs.map(msg =>
+              (msg.sender === 'agent' && msg.queryId === qId) ? { ...msg, artifacts } : msg
+            ));
+          }
         } else if (status === 'Failed') {
           setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Sorry, but something failed. Please try again.' }]);
         } else if (status === 'Timeout') {
@@ -371,78 +346,121 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
     poll();
   };
 
-  // Load result data (charts and inputs) for a specific query
-  // useLatest: if true, use LatestChart/LatestFlowsTable endpoints (no queryId needed)
+  // Load result data (charts and inputs) for a specific query.
+  // useLatest: if true, use LatestChart/LatestFlowsTable endpoints (no queryId needed).
+  // Returns a plain data object; does NOT update state directly.
   const loadResults = async (sessId, qId, useLatest = false) => {
+    const data = {};
     try {
       const token = await getAccessTokenSilently();
-
-      // Model Inputs (always requires queryId)
+      try { data.retInputs = await fetchRetirementInputs(sessId, qId, token); } catch {}
       try {
-        const inputs = await fetchRetirementInputs(sessId, qId, token);
-        setRetInputs(inputs);
-      } catch (err) {
-        // Ignore input fetch errors
-      }
-      // Charts
-      try {
-        const html = useLatest
+        data.flowsHtml = useLatest
           ? await fetchLatestChartHtml(sessId, 'Flows', token)
           : await fetchChartHtml(sessId, qId, 'Flows', token);
-        setFlowsHtml(html);
-      } catch (err) {
-        setFlowsHtml(null);
-      }
+      } catch {}
       try {
-        const html = useLatest
+        data.balancesHtml = useLatest
           ? await fetchLatestChartHtml(sessId, 'Balances', token)
           : await fetchChartHtml(sessId, qId, 'Balances', token);
-        setBalancesHtml(html);
-      } catch (err) {
-        setBalancesHtml(null);
-      }
-      // Chart thumbnails (PNG)
+      } catch {}
       try {
         const blob = useLatest
           ? await fetchLatestChart(sessId, 'Flows', token)
           : await fetchChart(sessId, qId, 'Flows', token);
-        setFlowsThumbnail(URL.createObjectURL(blob));
-      } catch (err) {
-        setFlowsThumbnail(null);
-      }
+        data.flowsThumbnail = URL.createObjectURL(blob);
+      } catch {}
       try {
         const blob = useLatest
           ? await fetchLatestChart(sessId, 'Balances', token)
           : await fetchChart(sessId, qId, 'Balances', token);
-        setBalancesThumbnail(URL.createObjectURL(blob));
-      } catch (err) {
-        setBalancesThumbnail(null);
-      }
-      // Summary table
+        data.balancesThumbnail = URL.createObjectURL(blob);
+      } catch {}
       try {
-        const summary = useLatest
+        data.summaryHtml = useLatest
           ? await fetchLatestSummaryTable(sessId, token)
           : await fetchSummaryTable(sessId, qId, token);
-        setSummaryHtml(summary);
-      } catch (err) {
-        setSummaryHtml(null);
-      }
-      // Optionally update messages/results
-      setResults((r) => ({ ...r }));
-    } catch (e) {
-      setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Error loading results: ' + e.message }]);
+      } catch {}
+    } catch {}
+    return data;
+  };
+
+  // Build the artifact object stored on each agent message from raw loadResults data.
+  const buildArtifacts = (data) => {
+    const images = [
+      data.flowsHtml ? {
+        html: data.flowsHtml,
+        alt: 'Flows Chart',
+        chartThumbnail: data.flowsThumbnail || null,
+        tableType: 'flows',
+        tableThumbnail: '/MonthlyCashFlowAnalysis.png',
+        tableLabel: 'Monthly Details',
+      } : null,
+      data.balancesHtml ? {
+        html: data.balancesHtml,
+        alt: 'Balances Chart',
+        chartThumbnail: data.balancesThumbnail || null,
+        tableType: 'annual',
+        tableThumbnail: '/AnnualCashFlowAnalysis.png',
+        tableLabel: 'Annual Details',
+      } : null,
+    ].filter(Boolean);
+
+    // Build inputs & assumptions tables from retInputs
+    const tables = [];
+    if (data.retInputs) {
+      const ri = data.retInputs;
+      const ss = ri.simulationSettingsAndAssumptionsDto ?? {};
+      const ia = ri.retirementPlanningSimulationInputs?.investorAssumptions ?? {};
+
+      tables.push({
+        title: 'Retiree Personal Data',
+        headers: ['Field', 'Value'],
+        rows: ri.retirementPlanningSimulationInputs?.retireePersonalData
+          ? Object.entries(ri.retirementPlanningSimulationInputs.retireePersonalData)
+          : [],
+        rowGroup: 0,
+      });
+      tables.push({
+        title: 'Simulation Settings and Assumptions',
+        headers: ['Setting', 'Value'],
+        rows: formatEntries({
+          ...Object.fromEntries(Object.entries(ss).filter(([k]) => !['annualMedicalInflationRate', 'marketROR', 'annualInflationRate', 'socialSecurityColaRate'].includes(k))),
+          ...Object.fromEntries(Object.entries(ia).filter(([k]) => k === 'stateIncomeTaxRate')),
+        }),
+        rowGroup: 0,
+      });
+      tables.push({
+        title: 'Investor Assumptions',
+        headers: ['Setting', 'Value'],
+        rows: formatEntries({
+          ...Object.fromEntries(Object.entries(ia).filter(([k]) => !['medicareDeductible', 'medigapPartGPremium', 'medicareStartDate', 'stateIncomeTaxRate'].includes(k))),
+          ...Object.fromEntries(Object.entries(ss).filter(([k]) => ['marketROR', 'annualInflationRate', 'socialSecurityColaRate'].includes(k))),
+        }),
+        rowGroup: 1,
+      });
+      tables.push({
+        title: 'Medical',
+        headers: ['Setting', 'Value'],
+        rows: [
+          ['Annual Medical Inflation Rate', ss.annualMedicalInflationRate != null ? `${(ss.annualMedicalInflationRate * 100).toFixed(1)}%` : ''],
+          ['Medicare Deductible', ia.medicareDeductible ?? ''],
+          ['Medigap Part G Premium', ia.medigapPartGPremium ?? ''],
+          ['Medicare Start Date', ia.medicareStartDate ?? ''],
+        ],
+        rowGroup: 1,
+      });
     }
+
+    return { images, tables, summaryHtml: data.summaryHtml || null };
   };
 
   // Update messages with dialog after query completes
   const updateMessagesFromDialog = async (sessId, qId) => {
     try {
       const token = await getAccessTokenSilently();
-
-      // Fetch structured dialog messages
       const dialogMessages = await fetchChatDialog(sessId, token);
       const normalizedMessages = normalizeDialogMessages(dialogMessages);
-      setDialog(normalizedMessages);
 
       // Find the last assistant message in the dialog (should match the current queryId)
       if (normalizedMessages.length > 0) {
@@ -474,59 +492,38 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   // Handler for clicking on a query ID
   const handleQueryIdClick = async (clickedQueryId) => {
     setSelectedQueryId(clickedQueryId);
-    isNewQueryRef.current = false; // This is a historical click, not a new query
+    isNewQueryRef.current = false;
 
-    // Clear existing results first to force re-render
-    setRetInputs(null);
-    setFlowsHtml(null);
-    setBalancesHtml(null);
-    setFlowsThumbnail(null);
-    setBalancesThumbnail(null);
-    setSummaryHtml(null);
-
-    // Load results for the selected query
     if (sessionId) {
-      await loadResults(sessionId, clickedQueryId);
+      const artifactData = await loadResults(sessionId, clickedQueryId);
+      const artifacts = buildArtifacts(artifactData);
+      setMessages(msgs => msgs.map(msg =>
+        (msg.sender === 'agent' && msg.queryId === clickedQueryId) ? { ...msg, artifacts } : msg
+      ));
     }
   };
 
-  // Handler for clicking on Monthly Details link
-  const handleDetailsClick = async (detailsLink) => {
+  // Open the Monthly Details table for a specific query in a new tab
+  const handleOpenFlowsTable = async (qId) => {
     try {
       const token = await getAccessTokenSilently();
-      // Use latest endpoint for new queries, otherwise use specific queryId
-      const html = isNewQueryRef.current
-        ? await fetchLatestFlowsTable(sessionId, token)
-        : await fetchFlowsTable(sessionId, selectedQueryId, token);
-
-      // Open HTML in new window
-      const newWindow = window.open('', '_blank');
-      if (newWindow) {
-        newWindow.document.write(html);
-        newWindow.document.close();
-      }
+      const html = await fetchFlowsTable(sessionId, qId, token);
+      const w = window.open('', '_blank');
+      if (w) { w.document.write(html); w.document.close(); }
     } catch (e) {
       console.error('Failed to load monthly details:', e);
-      alert('Failed to load monthly details: ' + e.message);
     }
   };
 
-  // Handler for clicking on Annual Details link
-  const handleAnnualDetailsClick = async () => {
+  // Open the Annual Details table for a specific query in a new tab
+  const handleOpenAnnualTable = async (qId) => {
     try {
       const token = await getAccessTokenSilently();
-      const html = isNewQueryRef.current
-        ? await fetchLatestAnnualTable(sessionId, token)
-        : await fetchAnnualTable(sessionId, selectedQueryId, token);
-
-      const newWindow = window.open('', '_blank');
-      if (newWindow) {
-        newWindow.document.write(html);
-        newWindow.document.close();
-      }
+      const html = await fetchAnnualTable(sessionId, qId, token);
+      const w = window.open('', '_blank');
+      if (w) { w.document.write(html); w.document.close(); }
     } catch (e) {
       console.error('Failed to load annual details:', e);
-      alert('Failed to load annual details: ' + e.message);
     }
   };
 
@@ -597,6 +594,9 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
           loadedQueryHistory={loadedQueryHistory}
           prefillText={chatPrefill}
           onPrefillConsumed={() => setChatPrefill('')}
+          onOpenFlowsTable={handleOpenFlowsTable}
+          onOpenAnnualTable={handleOpenAnnualTable}
+          onEditField={(label, value) => setChatPrefill(`${label} = ${value}`)}
         />
       </Box>
     </Box>

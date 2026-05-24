@@ -1,3 +1,5 @@
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import NotesIcon from '@mui/icons-material/Notes';
 import { Alert, Box, Button, Collapse, Link, Paper, TextField, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useRef, useState } from 'react';
@@ -58,7 +60,183 @@ const normalizeLatexDelimiters = (text) => {
   return result;
 };
 
-const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed }) => {
+// Renders charts, table thumbnails, and summary appended to an assistant message.
+const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTable, onEditField }) => {
+  const theme = useTheme();
+  const [inputsOpen, setInputsOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+
+  if (!artifacts) return null;
+  const { images, tables, summaryHtml } = artifacts;
+  const hasInputs = tables && tables.length > 0;
+  if (!images?.length && !summaryHtml && !hasInputs) return null;
+
+  return (
+    <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+      {/* Chart thumbnails and Annual Details table — all in one row */}
+      {images && images.length > 0 && (
+        <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 2, mb: summaryHtml ? 2 : 0 }}>
+          {/* Inputs & Assumptions thumbnail card */}
+          {hasInputs && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>Inputs &amp; Assumptions</Typography>
+              <Box
+                onClick={() => setInputsOpen(o => !o)}
+                sx={{
+                  width: 180,
+                  height: 90,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5,
+                  cursor: 'pointer',
+                  border: `1px solid ${inputsOpen ? theme.palette.primary.main : theme.palette.divider}`,
+                  borderRadius: 1,
+                  bgcolor: inputsOpen ? 'action.selected' : 'action.hover',
+                  '&:hover': { bgcolor: 'action.selected', borderColor: 'primary.main' },
+                }}
+              >
+                <EditOutlinedIcon sx={{ fontSize: 28, color: inputsOpen ? 'primary.main' : 'text.secondary' }} />
+                <Typography variant="caption" sx={{ color: inputsOpen ? 'primary.main' : 'text.secondary', fontSize: '0.7rem' }}>
+                  {inputsOpen ? 'Hide' : 'Show'}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+
+          {/* Chart thumbnails */}
+          {images.map((img, idx) => img.chartThumbnail && (
+            <Box key={`chart-${idx}`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>{img.alt}</Typography>
+              <Box
+                sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
+                onClick={() => {
+                  const blob = new Blob([img.html], { type: 'text/html' });
+                  window.open(URL.createObjectURL(blob), '_blank');
+                }}
+              >
+                <img src={img.chartThumbnail} alt={img.alt} style={{ width: 180, height: 'auto', display: 'block', borderRadius: 4 }} />
+              </Box>
+            </Box>
+          ))}
+
+          {/* Annual Details table thumbnail only */}
+          {images.filter(img => img.tableType === 'annual' && img.tableThumbnail).map((img, idx) => (
+            <Box key={`annual-${idx}`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>{img.tableLabel}</Typography>
+              <Box
+                sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
+                onClick={() => onOpenAnnualTable?.(queryId)}
+              >
+                <img
+                  src={img.tableThumbnail}
+                  alt={img.tableLabel}
+                  style={{ width: 180, height: 'auto', display: 'block', border: `1px solid ${theme.palette.divider}`, borderRadius: 4 }}
+                />
+              </Box>
+            </Box>
+          ))}
+
+          {/* Summary thumbnail card — rightmost */}
+          {summaryHtml && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>Summary</Typography>
+              <Box
+                onClick={() => setSummaryOpen(o => !o)}
+                sx={{
+                  width: 180,
+                  height: 90,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5,
+                  cursor: 'pointer',
+                  border: `1px solid ${summaryOpen ? theme.palette.primary.main : theme.palette.divider}`,
+                  borderRadius: 1,
+                  bgcolor: summaryOpen ? 'action.selected' : 'action.hover',
+                  '&:hover': { bgcolor: 'action.selected', borderColor: 'primary.main' },
+                }}
+              >
+                <NotesIcon sx={{ fontSize: 28, color: summaryOpen ? 'primary.main' : 'text.secondary' }} />
+                <Typography variant="caption" sx={{ color: summaryOpen ? 'primary.main' : 'text.secondary', fontSize: '0.7rem' }}>
+                  {summaryOpen ? 'Hide' : 'Show'}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Inputs & Assumptions expanded panel */}
+      {hasInputs && inputsOpen && (() => {
+        // Group tables by rowGroup
+        const grouped = tables.reduce((acc, table) => {
+          const g = table.rowGroup ?? 0;
+          if (!acc[g]) acc[g] = [];
+          acc[g].push(table);
+          return acc;
+        }, {});
+
+        const renderTable = (table, key) => (
+          <Paper key={key} elevation={1} sx={{ p: 1.5, overflow: 'auto' }}>
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>{table.title}</Typography>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+              <thead>
+                <tr>
+                  {table.headers.map((h, i) => (
+                    <th key={i} style={{ borderBottom: `2px solid ${theme.palette.secondary.main}`, padding: '3px 6px', textAlign: 'left', backgroundColor: theme.palette.action.hover, fontWeight: 600 }}>{h}</th>
+                  ))}
+                  <th style={{ borderBottom: `2px solid ${theme.palette.secondary.main}`, backgroundColor: theme.palette.action.hover, width: 24 }} />
+                </tr>
+              </thead>
+              <tbody>
+                {table.rows.map((row, i) => (
+                  <tr key={i} style={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
+                    {row.map((cell, j) => (
+                      <td key={j} style={{ padding: '3px 6px', textAlign: j === 0 ? 'left' : 'right' }}>{cell}</td>
+                    ))}
+                    <td style={{ padding: '0 2px', textAlign: 'center', width: 24 }}>
+                      <EditOutlinedIcon
+                        onClick={() => onEditField?.(row[0], row[1])}
+                        sx={{ fontSize: '0.85rem', color: 'text.disabled', verticalAlign: 'middle', cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Paper>
+        );
+
+        return (
+          <Box sx={{ mt: 2, display: 'inline-flex', flexDirection: 'column', gap: 1 }}>
+            {Object.entries(grouped).map(([g, groupTables]) => (
+              <Box key={g} sx={{ display: 'inline-flex', gap: 1 }}>
+                {groupTables.map((t, i) => renderTable(t, `${g}-${i}`))}
+              </Box>
+            ))}
+          </Box>
+        );
+      })()}
+
+      {/* Summary expanded panel */}
+      {summaryHtml && summaryOpen && (() => {
+        return (
+          <Box>
+            <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>Summary</Typography>
+            <Paper elevation={0} sx={{ p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+              <pre style={{ margin: 0, whiteSpace: 'pre', fontFamily: 'monospace', fontSize: '0.6875rem' }}>{summaryHtml}</pre>
+            </Paper>
+          </Box>
+        );
+      })()}
+    </Box>
+  );
+};
+
+const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed, onOpenFlowsTable, onOpenAnnualTable, onEditField }) => {
   const theme = useTheme();
   const [inputValue, setInputValue] = useState('');
   const [queryHistory, setQueryHistory] = useState([]);
@@ -270,6 +448,13 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
                     Query ID: {msg.queryId}
                   </Typography>
                 )}
+                <MessageArtifacts
+                  artifacts={msg.artifacts}
+                  queryId={msg.queryId}
+                  onOpenFlowsTable={onOpenFlowsTable}
+                  onOpenAnnualTable={onOpenAnnualTable}
+                  onEditField={onEditField}
+                />
               </>
             ) : (
               <Typography component="div" sx={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
