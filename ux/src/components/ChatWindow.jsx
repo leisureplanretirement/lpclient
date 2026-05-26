@@ -236,7 +236,7 @@ const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTa
   );
 };
 
-const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed, onOpenFlowsTable, onOpenAnnualTable, onEditField }) => {
+const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed, onOpenFlowsTable, onOpenAnnualTable, onEditField, isAdmin, onAdminClick }) => {
   const theme = useTheme();
   const [inputValue, setInputValue] = useState('');
   const [queryHistory, setQueryHistory] = useState([]);
@@ -427,26 +427,42 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
                   </Box>
                 )}
                 {msg.queryId && (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: 'block',
-                      mt: 1,
-                      fontStyle: 'italic',
-                      fontSize: '0.8rem',
-                      color: selectedQueryId === msg.queryId ? theme.palette.secondary.main : theme.palette.text.primary,
-                      backgroundColor: selectedQueryId === msg.queryId ? theme.palette.action.selected : theme.palette.action.hover,
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                      '&:hover': {
-                        backgroundColor: theme.palette.action.selected,
-                        color: theme.palette.secondary.main,
-                      }
-                    }}
-                    onClick={() => onQueryIdClick && onQueryIdClick(msg.queryId)}
-                  >
-                    Query ID: {msg.queryId}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: 'block',
+                        fontStyle: 'italic',
+                        fontSize: '0.8rem',
+                        color: selectedQueryId === msg.queryId ? theme.palette.secondary.main : theme.palette.text.primary,
+                        backgroundColor: selectedQueryId === msg.queryId ? theme.palette.action.selected : theme.palette.action.hover,
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        '&:hover': {
+                          backgroundColor: theme.palette.action.selected,
+                          color: theme.palette.secondary.main,
+                        }
+                      }}
+                      onClick={() => onQueryIdClick && onQueryIdClick(msg.queryId)}
+                    >
+                      Query ID: {msg.queryId}
+                    </Typography>
+                    {isAdmin && onAdminClick && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '0.75rem',
+                          color: theme.palette.secondary.main,
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                          '&:hover': { color: theme.palette.secondary.dark },
+                        }}
+                        onClick={() => onAdminClick(sessionId, msg.queryId)}
+                      >
+                        Admin
+                      </Typography>
+                    )}
+                  </Box>
                 )}
                 <MessageArtifacts
                   artifacts={msg.artifacts}

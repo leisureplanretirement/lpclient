@@ -578,6 +578,8 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
           onOpenFlowsTable={handleOpenFlowsTable}
           onOpenAnnualTable={handleOpenAnnualTable}
           onEditField={(label, value) => setChatPrefill(`${label} = ${value}`)}
+          isAdmin={isAdmin}
+          onAdminClick={handleAdminClick}
         />
       </Box>
     </Box>
