@@ -5,9 +5,11 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { Box, IconButton, Paper, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useState } from 'react';
+import { useShowIds } from '../ShowIdsContext';
 
 const ResultsWindow = ({ images, tables, summaryHtml, queryId, sessionId, onDetailsClick, onAnnualDetailsClick, isAdmin, onAdminClick, onEditField }) => {
   const theme = useTheme();
+  const { showIds } = useShowIds();
   const [inputsExpanded, setInputsExpanded] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [summaryTruncated, setSummaryTruncated] = useState(true);
@@ -347,7 +349,7 @@ const ResultsWindow = ({ images, tables, summaryHtml, queryId, sessionId, onDeta
 
       {/* Query ID at bottom */}
       <Box sx={{ mt: 'auto', pt: 2 }}>
-        {queryId && (
+        {showIds && queryId && (
           <Typography
             variant="caption"
             sx={{

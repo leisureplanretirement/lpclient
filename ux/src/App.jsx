@@ -24,6 +24,7 @@ import {
   sendMessage
 } from './api';
 import { ColorModeContext } from './ColorModeContext';
+import { ShowIdsContext } from './ShowIdsContext';
 import Banner from './components/Banner';
 import ChatWindow from './components/ChatWindow';
 import CookieNotice from './components/CookieNotice';
@@ -591,6 +592,7 @@ function App() {
   const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
 
   const [mode, setMode] = useState(() => localStorage.getItem('colorMode') ?? 'dark');
+  const [showIds, setShowIdsState] = useState(() => localStorage.getItem('showIds') === 'true');
   const theme = useMemo(() => createAppTheme(mode), [mode]);
   const [balance, setBalance] = useState(null);
   const [canceled, setCanceled] = useState(false);
@@ -641,6 +643,14 @@ function App() {
     },
   }), [mode]);
 
+  const showIdsContext = useMemo(() => ({
+    showIds,
+    setShowIds: (val) => {
+      setShowIdsState(val);
+      localStorage.setItem('showIds', String(val));
+    },
+  }), [showIds]);
+
   const impersonationContext = useMemo(() => ({
     isAdmin,
     impersonationEnabled: impersonation.enabled,
@@ -652,6 +662,7 @@ function App() {
   return (
     <ImpersonationContext.Provider value={impersonationContext}>
     <ColorModeContext.Provider value={colorModeContext}>
+    <ShowIdsContext.Provider value={showIdsContext}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
@@ -692,6 +703,7 @@ function App() {
           </Box>
         </Router>
       </ThemeProvider>
+    </ShowIdsContext.Provider>
     </ColorModeContext.Provider>
     </ImpersonationContext.Provider>
   );

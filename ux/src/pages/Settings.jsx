@@ -2,6 +2,7 @@ import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogCont
 import { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useColorMode } from '../ColorModeContext';
+import { useShowIds } from '../ShowIdsContext';
 import { useImpersonation } from '../ImpersonationContext';
 import { cancelAccount, getDiscountCodes, putDiscountCodes } from '../api';
 
@@ -19,6 +20,7 @@ async function subToGuid(sub) {
 
 const Settings = () => {
   const { mode, setMode } = useColorMode();
+  const { showIds, setShowIds } = useShowIds();
   const { isAdmin, impersonationEnabled, isImpersonating, impersonateSubject, setImpersonation } = useImpersonation();
   const { getAccessTokenSilently, logout, user } = useAuth0();
   const rawSub = isImpersonating ? impersonateSubject : (user?.sub ?? null);
@@ -103,6 +105,18 @@ const Settings = () => {
         }
         label={isDarkMode ? 'Dark Mode' : 'Light Mode'}
       />
+
+      <Box sx={{ mt: 1 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showIds}
+              onChange={e => setShowIds(e.target.checked)}
+            />
+          }
+          label="Show Session & Query IDs"
+        />
+      </Box>
 
       {isAdmin && displayedUserId && (
         <Box sx={{ mt: 2 }}>

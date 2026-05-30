@@ -3,6 +3,7 @@ import NotesIcon from '@mui/icons-material/Notes';
 import { Alert, Box, Button, Collapse, Link, Paper, TextField, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useRef, useState } from 'react';
+import { useShowIds } from '../ShowIdsContext';
 
 // Component to display error message with expandable details
 const ErrorMessage = ({ text, details }) => {
@@ -238,6 +239,7 @@ const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTa
 
 const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed, onOpenFlowsTable, onOpenAnnualTable, onEditField, isAdmin, onAdminClick }) => {
   const theme = useTheme();
+  const { showIds } = useShowIds();
   const [inputValue, setInputValue] = useState('');
   const [queryHistory, setQueryHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -357,7 +359,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
           gap: 2
         }}
       >
-        {sessionId && (
+        {showIds && sessionId && (
           <Typography
             variant="caption"
             sx={{
@@ -426,7 +428,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
                     <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{normalizeLatexDelimiters(msg.text)}</ReactMarkdown>
                   </Box>
                 )}
-                {msg.queryId && (
+                {showIds && msg.queryId && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
                     <Typography
                       variant="caption"
