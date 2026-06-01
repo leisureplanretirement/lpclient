@@ -405,6 +405,32 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             Chat Session ID: {sessionId}
           </Typography>
         )}
+        {!messages.some(m => m.sender === 'user') && (
+          <Box sx={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: 200,
+          }}>
+            <Paper elevation={2} sx={{ p: 4, textAlign: 'center', maxWidth: 400 }}>
+              <Typography variant="body1" gutterBottom>
+                For examples see{' '}
+                <Link href="/help/SampleQueries.html" target="_blank" rel="noopener noreferrer">
+                  here
+                </Link>
+                .
+              </Typography>
+              <Typography variant="body1">
+                For questions, or support issues, click{' '}
+                <Link href="mailto:leisureplansupport@gmail.com">
+                  here
+                </Link>
+                .
+              </Typography>
+            </Paper>
+          </Box>
+        )}
         {messages.map((msg, idx) => (
           <Paper
             key={idx}
