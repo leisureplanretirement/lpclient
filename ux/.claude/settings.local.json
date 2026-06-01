@@ -9,7 +9,8 @@
       "Bash(find /Users/robertwoodley/code/lpclient/ux/src -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
       "Bash(wc:*)",
       "Bash(gh repo *)",
-      "Bash(gh issue *)"
+      "Bash(gh issue *)",
+      "Skill(update-config)"
     ]
   }
 }

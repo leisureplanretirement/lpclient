@@ -1,6 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#388E3C"/>
-  <text x="13" y="44" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="bold" fill="#fff" letter-spacing="-2" style="font-style:italic;">g</text>
-  <text x="28" y="44" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="bold" fill="#A5D6A7" letter-spacing="-2" style="font-style:italic;">a</text>
-  <text x="43" y="44" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="bold" fill="#fff176" letter-spacing="-2" style="font-style:italic;">r</text>
+  <!-- Background: rounded rect with sky -->
+  <rect width="64" height="64" rx="12" fill="#7ecbcc"/>
+
+  <!-- Back hills (lighter green) -->
+  <ellipse cx="12" cy="52" rx="22" ry="14" fill="#5aaa5a"/>
+  <ellipse cx="52" cy="54" rx="22" ry="14" fill="#5aaa5a"/>
+
+  <!-- Front hills (darker green) -->
+  <ellipse cx="10" cy="62" rx="26" ry="16" fill="#2e7d32"/>
+  <ellipse cx="54" cy="62" rx="26" ry="16" fill="#2e7d32"/>
+  <ellipse cx="32" cy="60" rx="24" ry="14" fill="#388e3c"/>
+
+  <!-- Gold coin -->
+  <circle cx="32" cy="26" r="15" fill="#f5a800"/>
+  <circle cx="32" cy="26" r="12" fill="#ffc107"/>
+  <!-- Dollar sign -->
+  <text x="32" y="32" font-family="Arial, sans-serif" font-size="16" font-weight="bold"
+        fill="#b8680a" text-anchor="middle">$</text>
 </svg>
