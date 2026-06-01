@@ -414,6 +414,9 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             minHeight: 200,
           }}>
             <Paper elevation={2} sx={{ p: 4, textAlign: 'center', maxWidth: 400 }}>
+              <Typography variant="h6" gutterBottom>
+                To start, enter your question below.
+              </Typography>
               <Typography variant="body1" gutterBottom>
                 For examples see{' '}
                 <Link href="/help/SampleQueries.html" target="_blank" rel="noopener noreferrer">
@@ -552,7 +555,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             fullWidth
             variant="outlined"
             size="small"
-            placeholder={isAuthenticated ? "Type your message..." : "Please login."}
+            placeholder={isAuthenticated ? "Type your question..." : "Please login."}
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}

@@ -19,7 +19,7 @@ const ChatInput = ({ onSend, loading }) => {
           fullWidth
           variant="outlined"
           size="small"
-          placeholder="Type your message..."
+          placeholder="Type your question..."
           value={value}
           onChange={e => setValue(e.target.value)}
           disabled={loading}
