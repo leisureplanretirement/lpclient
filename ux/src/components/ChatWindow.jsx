@@ -1,4 +1,5 @@
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import EmailIcon from '@mui/icons-material/Email';
 import NotesIcon from '@mui/icons-material/Notes';
 import { Alert, Box, Button, Collapse, Link, Paper, TextField, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -62,7 +63,7 @@ const normalizeLatexDelimiters = (text) => {
 };
 
 // Renders charts, table thumbnails, and summary appended to an assistant message.
-const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTable, onEditField }) => {
+const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onOpenAnnualTable, onEditField }) => {
   const theme = useTheme();
   const [inputsOpen, setInputsOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -139,7 +140,7 @@ const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTa
             </Box>
           ))}
 
-          {/* Summary thumbnail card — rightmost */}
+          {/* Summary thumbnail card */}
           {summaryHtml && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Typography variant="caption" sx={{ fontWeight: 600 }}>Summary</Typography>
@@ -167,6 +168,35 @@ const MessageArtifacts = ({ artifacts, queryId, onOpenFlowsTable, onOpenAnnualTa
               </Box>
             </Box>
           )}
+
+          {/* Support thumbnail card — rightmost */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Typography variant="caption" sx={{ fontWeight: 600 }}>Support</Typography>
+            <Box
+              component="a"
+              href={`mailto:leisureplansupport@gmail.com?body=${encodeURIComponent(`Please include these IDs, SessionID: ${sessionId ?? ''}, QueryID: ${queryId ?? ''}.`)}`}
+              sx={{
+                width: 90,
+                height: 90,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 0.5,
+                cursor: 'pointer',
+                border: `1px solid ${theme.palette.divider}`,
+                borderRadius: 1,
+                bgcolor: 'action.hover',
+                textDecoration: 'none',
+                '&:hover': { bgcolor: 'action.selected', borderColor: 'primary.main' },
+              }}
+            >
+              <EmailIcon sx={{ fontSize: 28, color: 'text.secondary' }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                Email Us
+              </Typography>
+            </Box>
+          </Box>
         </Box>
       )}
 
@@ -469,6 +499,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
                 <MessageArtifacts
                   artifacts={msg.artifacts}
                   queryId={msg.queryId}
+                  sessionId={sessionId}
                   onOpenFlowsTable={onOpenFlowsTable}
                   onOpenAnnualTable={onOpenAnnualTable}
                   onEditField={onEditField}
