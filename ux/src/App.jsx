@@ -608,6 +608,8 @@ function App() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
+      setImpersonationState({ enabled: false, subject: '' });
+      localStorage.removeItem('impersonation');
       getAccessTokenSilently().then(token => {
         if (!sessionStorage.getItem('lp_login_called')) {
           sessionStorage.setItem('lp_login_called', '1');
@@ -623,6 +625,8 @@ function App() {
     }
     if (!isLoading && !isAuthenticated) {
       setIsAdmin(false);
+      setImpersonationState({ enabled: false, subject: '' });
+      localStorage.removeItem('impersonation');
       sessionStorage.removeItem('lp_login_called');
     }
   }, [isLoading, isAuthenticated]);
