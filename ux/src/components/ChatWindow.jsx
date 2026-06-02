@@ -73,6 +73,19 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
   const hasInputs = tables && tables.length > 0;
   if (!images?.length && !summaryHtml && !hasInputs) return null;
 
+  const artifactLabelSx = {
+    display: 'inline-block',
+    fontSize: '0.72rem',
+    fontWeight: 600,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    padding: '3px 9px',
+    borderRadius: '99px',
+    backgroundColor: theme.palette.mode === 'dark' ? '#1f3a3a' : '#ccfbf1',
+    color: theme.palette.mode === 'dark' ? '#2dd4bf' : '#0f766e',
+    mb: 0.5,
+  };
+
   return (
     <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
       {/* Thumbnail row — always shown when there are inputs; chart/table/summary thumbnails only when their data loaded */}
@@ -81,7 +94,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
           {/* Inputs & Assumptions thumbnail card */}
           {hasInputs && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>Inputs &amp; Assumptions</Typography>
+              <Typography component="span" sx={artifactLabelSx}>Inputs &amp; Assumptions</Typography>
               <Box
                 onClick={() => setInputsOpen(o => !o)}
                 sx={{
@@ -110,7 +123,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
           {/* Chart thumbnails */}
           {images.map((img, idx) => img.chartThumbnail && (
             <Box key={`chart-${idx}`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>{img.alt}</Typography>
+              <Typography component="span" sx={artifactLabelSx}>{img.alt}</Typography>
               <Box
                 sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
                 onClick={() => {
@@ -126,7 +139,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
           {/* Annual Details table thumbnail only */}
           {images.filter(img => img.tableType === 'annual' && img.tableThumbnail).map((img, idx) => (
             <Box key={`annual-${idx}`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>{img.tableLabel}</Typography>
+              <Typography component="span" sx={artifactLabelSx}>{img.tableLabel}</Typography>
               <Box
                 sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
                 onClick={() => onOpenAnnualTable?.(queryId)}
@@ -143,7 +156,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
           {/* Summary thumbnail card */}
           {summaryHtml && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>Summary</Typography>
+              <Typography component="span" sx={artifactLabelSx}>Summary</Typography>
               <Box
                 onClick={() => setSummaryOpen(o => !o)}
                 sx={{
@@ -171,7 +184,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
 
           {/* Support thumbnail card — rightmost */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <Typography variant="caption" sx={{ fontWeight: 600 }}>Support</Typography>
+            <Typography component="span" sx={artifactLabelSx}>Support</Typography>
             <Box
               component="a"
               href={`mailto:leisureplansupport@gmail.com?body=${encodeURIComponent(`Please include these IDs, SessionID: ${sessionId ?? ''}, QueryID: ${queryId ?? ''}.`)}`}
@@ -465,9 +478,26 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
               transition: 'border-color 0.15s',
             }}
           >
-            <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 0.5 }}>
-              {msg.sender === 'user' ? 'You' : 'Assistant'}
-            </Typography>
+            <Box sx={{ mb: 1 }}>
+              <Typography component="span" sx={{
+                display: 'inline-block',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                padding: '3px 9px',
+                borderRadius: '99px',
+                ...(msg.sender === 'user' ? {
+                  backgroundColor: theme.palette.mode === 'dark' ? '#1e3a5f' : '#dbeafe',
+                  color: theme.palette.mode === 'dark' ? '#60a5fa' : '#1d4ed8',
+                } : {
+                  backgroundColor: theme.palette.mode === 'dark' ? '#1a3a2e' : '#d1fae5',
+                  color: theme.palette.mode === 'dark' ? '#4ade80' : '#15803d',
+                }),
+              }}>
+                {msg.sender === 'user' ? 'You' : 'Assistant'}
+              </Typography>
+            </Box>
             {msg.sender === 'agent' ? (
               <>
                 {msg.errorDetails ? (
