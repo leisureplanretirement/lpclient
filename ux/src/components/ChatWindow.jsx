@@ -386,7 +386,8 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
           p: 2,
           display: 'flex',
           flexDirection: 'column',
-          gap: 2
+          gap: 2,
+          backgroundColor: theme.palette.mode === 'dark' ? '#0f1117' : '#f0f2f5',
         }}
       >
         {showIds && sessionId && (
@@ -413,7 +414,14 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             justifyContent: 'center',
             minHeight: 200,
           }}>
-            <Paper elevation={2} sx={{ p: 4, textAlign: 'center', maxWidth: 400 }}>
+            <Paper elevation={0} sx={{
+              p: 4,
+              textAlign: 'center',
+              maxWidth: 400,
+              borderRadius: '14px',
+              border: `1px solid ${theme.palette.mode === 'dark' ? '#2d3748' : '#d1d9e0'}`,
+              backgroundColor: theme.palette.mode === 'dark' ? '#1e2433' : '#ffffff',
+            }}>
               <Typography variant="h6" gutterBottom>
                 To start, enter your question below.
               </Typography>
@@ -438,17 +446,23 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
           <Paper
             key={idx}
             data-message-idx={idx}
-            elevation={1}
+            elevation={0}
             sx={{
               p: 2,
               maxWidth: msg.sender === 'user' ? '80%' : '100%',
               alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+              borderRadius: '14px',
+              border: '1px solid',
+              borderColor: msg.sender === 'user'
+                ? (theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.35)' : 'rgba(25, 118, 210, 0.25)')
+                : (theme.palette.mode === 'dark' ? '#2d3748' : '#d1d9e0'),
               backgroundColor: msg.sender === 'user'
-                ? (theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.2)' : '#e3f2fd')
-                : theme.palette.background.default,
+                ? (theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.15)' : '#dbeafe')
+                : (theme.palette.mode === 'dark' ? '#1e2433' : '#ffffff'),
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
-              wordBreak: 'break-word'
+              wordBreak: 'break-word',
+              transition: 'border-color 0.15s',
             }}
           >
             <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 0.5 }}>
