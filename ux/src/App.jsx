@@ -691,14 +691,11 @@ function App() {
               </Routes>
             </Box>
             <Box sx={{
-              borderTop: '1px solid',
-              borderColor: 'divider',
-              backgroundColor: 'background.default',
-              padding: '8px 16px',
-              fontSize: '0.75rem',
-              color: 'text.secondary',
-              textAlign: 'left',
-              lineHeight: 1.4
+              borderTop: '1px solid #2d3748',
+              padding: '12px 16px',
+              fontSize: '0.82rem',
+              color: '#64748b',
+              lineHeight: 1.4,
             }}>
               <strong>Disclaimer:</strong> The information and calculations provided on this website are for educational purposes only and are not intended as financial, investment, tax, or legal advice. Individual circumstances vary, and you should consult with a qualified financial advisor, tax professional, or attorney before making any decisions based on the information provided.
               {' '}<a href="/privacy">Privacy Policy</a>

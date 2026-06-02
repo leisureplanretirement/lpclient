@@ -93,7 +93,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
         <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 2, mb: summaryHtml ? 2 : 0 }}>
           {/* Inputs & Assumptions thumbnail card */}
           {hasInputs && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
               <Typography component="span" sx={artifactLabelSx}>Inputs &amp; Assumptions</Typography>
               <Box
                 onClick={() => setInputsOpen(o => !o)}
@@ -122,7 +122,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
 
           {/* Chart thumbnails */}
           {images.map((img, idx) => img.chartThumbnail && (
-            <Box key={`chart-${idx}`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box key={`chart-${idx}`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
               <Typography component="span" sx={artifactLabelSx}>{img.alt}</Typography>
               <Box
                 sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
@@ -138,7 +138,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
 
           {/* Annual Details table thumbnail only */}
           {images.filter(img => img.tableType === 'annual' && img.tableThumbnail).map((img, idx) => (
-            <Box key={`annual-${idx}`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box key={`annual-${idx}`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
               <Typography component="span" sx={artifactLabelSx}>{img.tableLabel}</Typography>
               <Box
                 sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
@@ -155,7 +155,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
 
           {/* Summary thumbnail card */}
           {summaryHtml && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
               <Typography component="span" sx={artifactLabelSx}>Summary</Typography>
               <Box
                 onClick={() => setSummaryOpen(o => !o)}
@@ -183,7 +183,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
           )}
 
           {/* Support thumbnail card — rightmost */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
             <Typography component="span" sx={artifactLabelSx}>Support</Typography>
             <Box
               component="a"
@@ -607,13 +607,25 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             multiline
             maxRows={4}
             inputRef={inputRef}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#a78bfa' },
+                '&:hover fieldset': { borderColor: '#c4b5fd' },
+                '&.Mui-focused fieldset': { borderColor: '#a78bfa' },
+              },
+            }}
           />
           <Button
             type="submit"
             variant="contained"
-            color="primary"
             disabled={loading || !inputValue.trim() || !isAuthenticated || isImpersonating || lowBalance}
-            sx={{ minWidth: 80 }}
+            sx={{
+              minWidth: 80,
+              backgroundColor: '#a78bfa',
+              color: '#1e1b4b',
+              '&:hover': { backgroundColor: '#c4b5fd' },
+              '&.Mui-disabled': { backgroundColor: theme.palette.mode === 'dark' ? '#2d1f5e' : '#ede9fe', color: theme.palette.mode === 'dark' ? '#6d5fa8' : '#a78bfa' },
+            }}
           >
             Send
           </Button>

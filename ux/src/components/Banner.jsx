@@ -40,7 +40,7 @@ const Banner = ({ canceled = false }) => {
   return (
     <AppBar position="static" sx={{
       background: isDark
-        ? 'linear-gradient(90deg, #1a3a2e 0%, #1e2d4a 100%)'
+        ? 'linear-gradient(90deg, #1e2433 0%, #2d1f5e 100%)'
         : 'linear-gradient(90deg, #d1fae5 0%, #dbeafe 100%)',
       boxShadow: 'none',
       borderBottom: `1px solid ${isDark ? '#2d3748' : '#bfdbfe'}`,
@@ -73,7 +73,7 @@ const Banner = ({ canceled = false }) => {
           </>
         )}
         <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: isDark ? '#e2e8f0' : '#1e3a2e' }}>
+          <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: isDark ? '#e2e8f0' : '#1e3a2e', textShadow: isDark ? '0 1px 8px rgba(167,139,250,0.18)' : 'none' }}>
             LeisurePlan.App
           </Typography>
         </Box>
