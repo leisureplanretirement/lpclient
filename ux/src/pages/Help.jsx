@@ -2,7 +2,7 @@ import { Box, Divider, Link, Typography } from '@mui/material';
 
 const Help = () => {
   return (
-    <Box sx={{ p: 3, maxWidth: 640 }}>
+    <Box sx={{ p: 3, maxWidth: 640, height: '100%', overflowY: 'auto' }}>
       <Typography variant="h5" sx={{ mb: 3 }}>Help</Typography>
 
       <Typography variant="h6" sx={{ mb: 1 }}>Getting Started</Typography>

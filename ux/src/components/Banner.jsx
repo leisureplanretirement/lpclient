@@ -73,8 +73,11 @@ const Banner = ({ canceled = false }) => {
           </>
         )}
         <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: isDark ? '#e2e8f0' : '#1e3a2e', textShadow: isDark ? '0 1px 8px rgba(167,139,250,0.18)' : 'none' }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 700, color: isDark ? '#e2e8f0' : '#1e3a2e', textShadow: isDark ? '0 1px 8px rgba(167,139,250,0.18)' : 'none', lineHeight: 1.2, mb: 1 }}>
             LeisurePlan.App
+          </Typography>
+          <Typography variant="caption" component="div" sx={{ color: isDark ? '#a78bfa' : '#4c1d95', letterSpacing: '0.08em', textTransform: 'none',fontWeight: 600, lineHeight: 1 }}>
+            Retirement Calculator
           </Typography>
         </Box>
         {!isLoading && (

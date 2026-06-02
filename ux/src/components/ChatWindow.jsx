@@ -467,10 +467,10 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
               borderRadius: '14px',
               border: '1px solid',
               borderColor: msg.sender === 'user'
-                ? (theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.35)' : 'rgba(25, 118, 210, 0.25)')
+                ? (theme.palette.mode === 'dark' ? 'rgba(167, 139, 250, 0.45)' : 'rgba(139, 92, 246, 0.3)')
                 : (theme.palette.mode === 'dark' ? '#2d3748' : '#d1d9e0'),
               backgroundColor: msg.sender === 'user'
-                ? (theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.15)' : '#dbeafe')
+                ? (theme.palette.mode === 'dark' ? 'rgba(167, 139, 250, 0.12)' : '#ede9fe')
                 : (theme.palette.mode === 'dark' ? '#1e2433' : '#ffffff'),
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
