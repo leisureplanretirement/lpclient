@@ -591,7 +591,7 @@ function App() {
   console.debug('[App] launched');
   const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
 
-  const [mode, setMode] = useState(() => localStorage.getItem('colorMode') ?? 'dark');
+  const [mode, setMode] = useState(() => localStorage.getItem('colorMode') ?? 'light');
   const [showIds, setShowIdsState] = useState(() => localStorage.getItem('showIds') === 'true');
   const theme = useMemo(() => createAppTheme(mode), [mode]);
   const [balance, setBalance] = useState(null);
