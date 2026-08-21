@@ -436,7 +436,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
               backgroundColor: theme.palette.mode === 'dark' ? '#1e2433' : '#ffffff',
             }}>
               <Typography variant="h6" gutterBottom>
-                To start, enter your question below.
+                {isAuthenticated ? 'To start, enter your question below.' : 'To start, please login.'}
               </Typography>
               <Typography variant="body1" gutterBottom>
                 For examples see{' '}
