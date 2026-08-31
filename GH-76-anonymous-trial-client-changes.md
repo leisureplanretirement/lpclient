@@ -14,10 +14,12 @@ Today, `ChatWindow.jsx` fully disables the chat input unless `isAuthenticated` i
 
 ## Server contract this client work depends on
 
-- Anonymous visitors are identified by a signed, `HttpOnly` cookie the server sets on first unauthenticated request. The client does not generate, read, or manage this cookie's value directly — the browser handles it automatically, as long as requests are made with credentials included (see below).
-- **Precedence:** if a request carries a valid JWT, the server treats the caller as the authenticated user and ignores any anon cookie present. The anon cookie only matters when there's no valid JWT. (Relevant if someone uses free queries, then logs in in the same browser without a refresh — both could be present on a request; server-side JWT always wins.)
+- **Anonymous visitors are identified by an opaque token carried in a custom `X-Anon-Id` request/response header — not a cookie.** A cookie was the original plan, but it turned out to be a third-party cookie (frontend and API are on different origins), which Chrome blocks by default regardless of `SameSite`/`Secure` attributes — confirmed by testing. The client is responsible for persisting this token itself (e.g. `localStorage`) and attaching it explicitly; nothing about it is automatic the way a cookie would be.
+  - On any anon-eligible call with no `X-Anon-Id` request header (or one the server can't validate), the server mints a new identity and returns it via an `X-Anon-Id` **response** header.
+  - The client should check every response from an anon-eligible call for that header and persist it (it may not be present if the client already sent a valid one — nothing changed — but should always be captured when it is present).
+- **Precedence:** if a request carries a valid JWT, the server treats the caller as the authenticated user and ignores any `X-Anon-Id` header present. The anon header only matters when there's no valid JWT. (Relevant if someone uses free queries, then logs in in the same browser without a refresh — both could be present on a request; server-side JWT always wins.)
 - Once the anon quota (5, server-side constant) is exhausted, the chat endpoint responds `HTTP 429` with a JSON body `{ "error": "anonymous_quota_exceeded" }` instead of processing the query. **Deliberately not 403** — `api.js`'s `throwOnError` already hard-codes `res.status === 403` to mean "account canceled" (`CanceledAccountError`), unconditionally, before it even looks at the response body. Reusing 403 for the quota case would get misclassified as a canceled account. 429 (Too Many Requests) is also the more semantically correct code for a spent quota.
-- On successful login (the existing `POST /User/Login` call the client already makes post-auth), the server clears the anon cookie so it doesn't linger once the visitor is a real logged-in user. No client action needed for this beyond continuing to call that endpoint as it already does.
+- On successful login, there's nothing for the server to clear — there's no server-held cookie any more. **This is now purely a client-side step:** clear the stored `X-Anon-Id` token from `localStorage` once login succeeds, so it doesn't keep getting sent (and ignored) on requests from a now-known user.
 
 ## Required client changes
 
@@ -32,8 +34,12 @@ Copy changes needed alongside this:
 - Placeholder text (`"Please login."` → something like `"Type your question..."` for anon visitors too)
 - Empty-state message (`"To start, please login."` → reflect that a trial is available)
 
-### 2. Send credentials on chat API calls
-`fetch` calls in `api.js` don't currently need to carry cookies (auth is bearer-token only). For the anon cookie to round-trip, the chat request(s) need `credentials: 'include'`. This also requires the backend's CORS policy to allow credentials with an explicit origin (not `*`) — a backend-side prerequisite, not a client change, but noted here since it'll break silently if missed.
+### 2. Persist and attach the anon token via a header, not credentials
+No `credentials: 'include'` needed — this isn't cookie-based. Instead:
+- Add a small helper to read/write the anon token in `localStorage` (e.g. under a key like `lp_anon_id`).
+- On every anon-eligible call (`sendMessage`, `fetchQueryStatus`, `fetchChatDialog`, `fetchSession`, the chart/table fetchers), attach the stored token as an `X-Anon-Id` request header when present — likely via `buildHeaders()`, alongside how it already conditionally adds `Authorization`.
+- After each such call, read `res.headers.get('X-Anon-Id')` and persist it to `localStorage` if present (it will be on the first anonymous call, and any time the server had to re-mint one; typically absent otherwise).
+- No CORS/credentials prerequisite on the backend for this — the header approach doesn't need `AllowCredentials()`, just `Access-Control-Expose-Headers` to include `X-Anon-Id` (already handled server-side), since custom response headers aren't readable via `fetch()` by default.
 
 ### 3. Handle the quota-exceeded response
 When a chat call returns `429` with `{ "error": "anonymous_quota_exceeded" }`, the client should:
@@ -52,12 +58,12 @@ export class AnonymousQuotaExceededError extends Error {
 ```
 and in `throwOnError`, add an independent branch — `if (res.status === 429) throw new AnonymousQuotaExceededError();` — alongside (not replacing) the existing `403`/`402`/`500` branches.
 
-### 4. Nothing needed for cookie/JWT precedence itself
-No client-side branching is required to choose between the anon cookie and the JWT — the browser attaches whichever is present automatically, and the server resolves precedence. The client's job is just to ensure `credentials: 'include'` is set so the cookie is ever sent at all.
+### 4. Nothing needed for anon-header/JWT precedence itself
+No client-side branching is required to choose between the anon token and the JWT — send whichever is available (`Authorization` when logged in, `X-Anon-Id` when not; both could technically go out if a stale anon token wasn't cleared yet, and the server resolves precedence in that case). The client's job is just to attach the header and clear the stored token on login (see above).
 
 ## Open UX decisions (not yet settled — flag before/during implementation)
 
-- Should remaining query count ("3 free questions left") be surfaced in the UI, and if so, is that count client-tracked (simple, but can drift from server truth) or read back from a server response header/field on each chat call (authoritative, needs a small server addition beyond the current 403-only contract)?
+- Should remaining query count ("3 free questions left") be surfaced in the UI, and if so, is that count client-tracked (simple, but can drift from server truth) or read back from a server response header/field on each chat call (authoritative, needs a small server addition beyond the current 429-only contract)?
 - Exact copy/wording for the trial-mode placeholder, empty state, and the login-prompt dialog triggered by quota exhaustion.
 - Whether the login-prompt dialog should auto-trigger the Auth0 login redirect, or just present a "Log In" button for the visitor to click.
 

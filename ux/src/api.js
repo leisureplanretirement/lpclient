@@ -73,6 +73,36 @@ function buildHeaders(token, includeImpersonation = true) {
   return headers;
 }
 
+// Anonymous trial identity — a server-signed opaque token carried in a request/response
+// header instead of a cookie, since the app and API run on different origins and a
+// cross-site cookie gets silently dropped by browsers that block third-party cookies.
+const ANON_ID_HEADER = 'X-Anon-Id';
+const ANON_ID_STORAGE_KEY = 'lp_anon_id';
+
+function getAnonId() {
+  try { return localStorage.getItem(ANON_ID_STORAGE_KEY) || null; } catch { return null; }
+}
+
+function clearAnonId() {
+  try { localStorage.removeItem(ANON_ID_STORAGE_KEY); } catch {}
+}
+
+// Adds the stored anon id (if any) to an already-built headers object.
+function withAnonId(headers) {
+  const anonId = getAnonId();
+  if (anonId) headers[ANON_ID_HEADER] = anonId;
+  return headers;
+}
+
+// Reads a (possibly refreshed) anon id off a response and persists it, so the client
+// stays in sync regardless of which endpoint the server chooses to refresh it on.
+function captureAnonId(res) {
+  const anonId = res.headers.get(ANON_ID_HEADER);
+  if (anonId) {
+    try { localStorage.setItem(ANON_ID_STORAGE_KEY, anonId); } catch {}
+  }
+}
+
 // POST /api/chat
 export async function sendMessage(message, sessionId, token) {
   const payload = { message };
@@ -82,10 +112,10 @@ export async function sendMessage(message, sessionId, token) {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const res = await fetch(`${API_BASE}/Chat`, {
       method: 'POST',
-      headers: buildHeaders(token, false),
-      credentials: 'include',
+      headers: withAnonId(buildHeaders(token, false)),
       body,
     });
+    captureAnonId(res);
     if (res.status === 409 && attempt < maxRetries) {
       await new Promise(resolve => setTimeout(resolve, 2000));
       continue;
@@ -110,9 +140,9 @@ export async function fetchChatHistory(token) {
 // Returns structured JSON array with { sender, text, timestamp, queryId } objects
 export async function fetchChatDialog(sessionId, token) {
   const res = await fetch(`${API_BASE}/Chat/Dialog?sessionId=${encodeURIComponent(sessionId)}`, {
-    headers: buildHeaders(token),
-    credentials: 'include',
+    headers: withAnonId(buildHeaders(token)),
   });
+  captureAnonId(res);
   const text = await res.text();
   if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
@@ -121,9 +151,9 @@ export async function fetchChatDialog(sessionId, token) {
 // GET /api/chat/RetirementCalculatorInputs?sessionId=...&queryId=...
 export async function fetchRetirementInputs(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/RetirementCalculatorInputs?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token),
-    credentials: 'include',
+    headers: withAnonId(buildHeaders(token)),
   });
+  captureAnonId(res);
   const text = await res.text();
   if (!res.ok) throwOnError(res, text);
   return JSON.parse(text);
@@ -132,9 +162,9 @@ export async function fetchRetirementInputs(sessionId, queryId, token) {
 // GET /api/chat/Chart?sessionId=...&queryId=...&chartType=...
 export async function fetchChart(sessionId, queryId, chartType, token) {
   const res = await fetch(`${API_BASE}/Chat/Chart?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}&chartType=${encodeURIComponent(chartType)}`, {
-    headers: buildHeaders(token),
-    credentials: 'include',
+    headers: withAnonId(buildHeaders(token)),
   });
+  captureAnonId(res);
   const blob = await res.blob();
   if (!res.ok) throw new Error('Failed to load chart');
   return blob;
@@ -153,9 +183,9 @@ export async function fetchLatestChart(sessionId, chartType, token) {
 // GET /api/Chat/ChartHtml?sessionId=...&queryId=...&chartType=...
 export async function fetchChartHtml(sessionId, queryId, chartType, token) {
   const res = await fetch(`${API_BASE}/Chat/ChartHtml?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}&chartType=${encodeURIComponent(chartType)}`, {
-    headers: buildHeaders(token),
-    credentials: 'include',
+    headers: withAnonId(buildHeaders(token)),
   });
+  captureAnonId(res);
   const html = await res.text();
   if (!res.ok) throw new Error('Failed to load chart');
   return html;
@@ -175,9 +205,9 @@ export async function fetchLatestChartHtml(sessionId, chartType, token) {
 // Returns { status, balanceUsd?, queryCostUsd? }
 export async function fetchQueryStatus(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/QueryStatus?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token),
-    credentials: 'include',
+    headers: withAnonId(buildHeaders(token)),
   });
+  captureAnonId(res);
   const text = await res.text();
   if (!res.ok) {
     // Backend may return a terminal status (e.g. Timeout) with a non-2xx code — honour it.
@@ -195,9 +225,9 @@ export async function fetchQueryStatus(sessionId, queryId, token) {
 // GET /api/chat/FlowsTable?sessionId=...&queryId=...
 export async function fetchFlowsTable(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/FlowsTable?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token),
-    credentials: 'include',
+    headers: withAnonId(buildHeaders(token)),
   });
+  captureAnonId(res);
   const html = await res.text();
   if (!res.ok) throwOnError(res, html);
   return html;
@@ -216,9 +246,9 @@ export async function fetchLatestFlowsTable(sessionId, token) {
 // GET /api/Chat/AnnualTable?sessionId=...&queryId=...
 export async function fetchAnnualTable(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/AnnualTable?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token),
-    credentials: 'include',
+    headers: withAnonId(buildHeaders(token)),
   });
+  captureAnonId(res);
   const html = await res.text();
   if (!res.ok) throwOnError(res, html);
   return html;
@@ -227,9 +257,9 @@ export async function fetchAnnualTable(sessionId, queryId, token) {
 // GET /api/Chat/SummaryTable?sessionId=...&queryId=...
 export async function fetchSummaryTable(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/SummaryTable?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token),
-    credentials: 'include',
+    headers: withAnonId(buildHeaders(token)),
   });
+  captureAnonId(res);
   const text = await res.text();
   if (!res.ok) throwOnError(res, text);
   return text;
@@ -280,12 +310,12 @@ export async function postUserLogin(token) {
   const res = await fetch(`${API_BASE}/User/Login`, {
     method: 'POST',
     headers: buildHeaders(token, false),
-    credentials: 'include',
   });
   if (!res.ok) {
     if (res.status === 403) throw new CanceledAccountError();
     return null;
   }
+  clearAnonId();
   return res.json();
 }
 
