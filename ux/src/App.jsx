@@ -24,7 +24,6 @@ import {
   sendMessage
 } from './api';
 import { ColorModeContext } from './ColorModeContext';
-import { ShowIdsContext } from './ShowIdsContext';
 import Banner from './components/Banner';
 import ChatWindow from './components/ChatWindow';
 import CookieNotice from './components/CookieNotice';
@@ -42,6 +41,7 @@ import PostVerify from './pages/PostVerify';
 import Privacy from './pages/Privacy';
 import Sessions from './pages/Sessions';
 import Settings from './pages/Settings';
+import { ShowIdsContext } from './ShowIdsContext';
 import { createAppTheme } from './theme';
 
 
@@ -531,7 +531,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         <DialogTitle>Welcome to LeisurePlan!</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            You have ${welcomeBalance?.toFixed(2)} in free credit ready to use. You should get about 20 queries/dollar.
+            You have ${welcomeBalance?.toFixed(2)} in free credit ready to use. You should get about several queries/dollar.
           </DialogContentText>
           <DialogContentText sx={{ mt: 2 }}>
             To get started, ask me anything about planning for retirement. See the <a href="/help">Help page</a> for examples.
