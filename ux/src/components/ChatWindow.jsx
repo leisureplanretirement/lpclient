@@ -280,7 +280,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
   );
 };
 
-const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed, onOpenFlowsTable, onOpenAnnualTable, onEditField, isAdmin, onAdminClick }) => {
+const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, quotaExceeded, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed, onOpenFlowsTable, onOpenAnnualTable, onEditField, isAdmin, onAdminClick }) => {
   const theme = useTheme();
   const { showIds } = useShowIds();
   const [inputValue, setInputValue] = useState('');
@@ -291,6 +291,8 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
   const scrollContainerRef = useRef(null);
   const inputRef = useRef(null);
   const prevMessageCountRef = useRef(0);
+  // Anonymous visitors may send until their trial quota is exhausted server-side.
+  const canSend = isAuthenticated || !quotaExceeded;
 
   // Reset history when a new chat session starts (sessionId goes to null)
   useEffect(() => {
@@ -436,7 +438,11 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
               backgroundColor: theme.palette.mode === 'dark' ? '#1e2433' : '#ffffff',
             }}>
               <Typography variant="h6" gutterBottom>
-                {isAuthenticated ? 'To start, enter your question below.' : 'To start, please login.'}
+                {isAuthenticated
+                  ? 'To start, enter your question below.'
+                  : quotaExceeded
+                    ? 'Log in to keep chatting.'
+                    : 'Try it free — ask up to 5 questions below, no login required.'}
               </Typography>
               <Typography variant="body1" gutterBottom>
                 For examples see{' '}
@@ -599,11 +605,11 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             fullWidth
             variant="outlined"
             size="small"
-            placeholder={isAuthenticated ? "Type your question..." : "Please login."}
+            placeholder={canSend ? "Type your question..." : "Log in to continue..."}
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={loading || !isAuthenticated || isImpersonating || lowBalance}
+            disabled={loading || !canSend || isImpersonating || lowBalance}
             multiline
             maxRows={4}
             inputRef={inputRef}
@@ -618,7 +624,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || !inputValue.trim() || !isAuthenticated || isImpersonating || lowBalance}
+            disabled={loading || !inputValue.trim() || !canSend || isImpersonating || lowBalance}
             sx={{
               minWidth: 80,
               backgroundColor: '#a78bfa',

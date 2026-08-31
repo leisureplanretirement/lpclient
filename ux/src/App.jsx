@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar } from '@mui/material';
 import { Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import {
+  AnonymousQuotaExceededError,
   ApiError,
   CanceledAccountError,
   InsufficientBalanceError,
@@ -93,7 +94,11 @@ function CanceledRedirect({ canceled }) {
 }
 
 function MainChat({ onBalanceUpdate, onCanceled }) {
-  const { getAccessTokenSilently, isAuthenticated, isLoading, error: auth0Error } = useAuth0();
+  const { getAccessTokenSilently, loginWithRedirect, isAuthenticated, isLoading, error: auth0Error } = useAuth0();
+  // Only fetch a bearer token for authenticated users — anonymous requests rely on the
+  // server's anon-trial cookie instead, and getAccessTokenSilently() throws when there's
+  // no Auth0 session to silently refresh.
+  const getAuthToken = () => isAuthenticated ? getAccessTokenSilently() : Promise.resolve(undefined);
   const location = useLocation();
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -116,12 +121,14 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const [authError, setAuthError] = useState(null);
   const [loadedQueryHistory, setLoadedQueryHistory] = useState([]);
   const [chatPrefill, setChatPrefill] = useState('');
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [quotaDialogOpen, setQuotaDialogOpen] = useState(false);
 
   // Helper function to get appropriate welcome message based on auth state
-  const getWelcomeMessage = (isAuth) => {
-    return isAuth
-      ? 'How can I help you plan your retirement?'
-      : 'Welcome to LeisurePlan.App! Please Login.';
+  const getWelcomeMessage = (isAuth, exceeded = false) => {
+    if (isAuth) return 'How can I help you plan your retirement?';
+    if (exceeded) return "You've used your 5 free questions. Log in to keep chatting.";
+    return "Welcome to LeisurePlan.App! Try it free — ask up to 5 questions, no login required.";
   };
 
   // Set initial welcome message after Auth0 finishes loading
@@ -129,7 +136,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
     if (!isLoading && messages.length === 0) {
       setMessages([{
         sender: 'agent',
-        text: getWelcomeMessage(isAuthenticated)
+        text: getWelcomeMessage(isAuthenticated, quotaExceeded)
       }]);
     }
   }, [isLoading]);
@@ -144,9 +151,10 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
 
       // User logged out - clear everything for security
       if (prevAuth && !currentAuth) {
+        setQuotaExceeded(false);
         setMessages([{
           sender: 'agent',
-          text: getWelcomeMessage(false)
+          text: getWelcomeMessage(false, false)
         }]);
         setSessionId(null);
         setQueryId(null);
@@ -155,6 +163,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
 
       // User logged in - update welcome message and check for new user
       if (!prevAuth && currentAuth) {
+        setQuotaExceeded(false);
         setMessages((msgs) => {
           if (msgs.length === 1 && msgs[0].sender === 'agent') {
             return [{ sender: 'agent', text: getWelcomeMessage(true) }];
@@ -260,7 +269,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   // Handle "New Chat" from menu
   useEffect(() => {
     if (location.state?.newChat) {
-      setMessages([{ sender: 'agent', text: getWelcomeMessage(isAuthenticated) }]);
+      setMessages([{ sender: 'agent', text: getWelcomeMessage(isAuthenticated, quotaExceeded) }]);
       setSessionId(null);
       setQueryId(null);
       setSelectedQueryId(null);
@@ -278,7 +287,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
     setMessages((msgs) => [...msgs, { sender: 'user', text }]);
     setLoading(true);
     try {
-      const token = await getAccessTokenSilently();
+      const token = await getAuthToken();
       const res = await sendMessage(text, sessionId, token);
       setSessionId(res.chatSessionId);
       setQueryId(res.chatQueryId);
@@ -287,7 +296,10 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       setMessages((msgs) => [...msgs, { sender: 'agent', text: res.reply || 'Message sent. Waiting for results...', queryId: res.chatQueryId }]);
       pollQueryStatus(res.chatSessionId, res.chatQueryId);
     } catch (e) {
-      if (e instanceof CanceledAccountError) {
+      if (e instanceof AnonymousQuotaExceededError) {
+        setQuotaExceeded(true);
+        setQuotaDialogOpen(true);
+      } else if (e instanceof CanceledAccountError) {
         onCanceled();
       } else if (e instanceof InsufficientBalanceError) {
         setLowBalance(true);
@@ -312,7 +324,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       setPollCount(prev => prev + 1);
       const currentPoll = pollCount + 1;
       try {
-        const token = await getAccessTokenSilently();
+        const token = await getAuthToken();
         const statusData = await fetchQueryStatus(sessId, qId, token);
         const status = statusData.status;
         setQueryStatus(status);
@@ -349,7 +361,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const loadResults = async (sessId, qId) => {
     const data = {};
     try {
-      const token = await getAccessTokenSilently();
+      const token = await getAuthToken();
       console.log('[loadResults]', { sessId, qId });
       try { data.retInputs = await fetchRetirementInputs(sessId, qId, token); } catch {}
       try { data.flowsHtml = await fetchChartHtml(sessId, qId, 'Flows', token); } catch {}
@@ -440,7 +452,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   // Update messages with dialog after query completes
   const updateMessagesFromDialog = async (sessId, qId) => {
     try {
-      const token = await getAccessTokenSilently();
+      const token = await getAuthToken();
       const dialogMessages = await fetchChatDialog(sessId, token);
       const normalizedMessages = normalizeDialogMessages(dialogMessages);
 
@@ -488,7 +500,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   // Open the Monthly Details table for a specific query in a new tab
   const handleOpenFlowsTable = async (qId) => {
     try {
-      const token = await getAccessTokenSilently();
+      const token = await getAuthToken();
       const html = await fetchFlowsTable(sessionId, qId, token);
       const w = window.open('', '_blank');
       if (w) { w.document.write(html); w.document.close(); }
@@ -500,7 +512,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   // Open the Annual Details table for a specific query in a new tab.
   const handleOpenAnnualTable = async (qId) => {
     try {
-      const token = await getAccessTokenSilently();
+      const token = await getAuthToken();
       const html = await fetchAnnualTable(sessionId, qId, token);
       const w = window.open('', '_blank');
       if (w) { w.document.write(html); w.document.close(); }
@@ -558,6 +570,20 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         </DialogActions>
       </Dialog>
 
+      <Dialog open={quotaDialogOpen} onClose={() => setQuotaDialogOpen(false)}>
+        <DialogTitle>Free questions used</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You've used your 5 free questions. Log in to keep chatting — it only takes a moment.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setQuotaDialogOpen(false); loginWithRedirect(); }} autoFocus>
+            Log In
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <PollingProgressBar pollCount={pollCount} maxPolls={maxPolls} loading={queryStatus === 'Working'} />
         {lowBalance && <LowBalanceBanner />}
@@ -571,6 +597,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
           onScrollComplete={() => setShouldScrollToBottom(false)}
           sessionId={sessionId}
           isAuthenticated={isAuthenticated}
+          quotaExceeded={quotaExceeded}
           isImpersonating={isImpersonating}
           lowBalance={lowBalance}
           loadedQueryHistory={loadedQueryHistory}

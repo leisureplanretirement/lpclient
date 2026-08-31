@@ -27,12 +27,24 @@ export class CanceledAccountError extends Error {
   }
 }
 
+// Custom error for 429 anonymous trial quota exhausted
+export class AnonymousQuotaExceededError extends Error {
+  constructor() {
+    super('Anonymous quota exceeded');
+    this.name = 'AnonymousQuotaExceededError';
+  }
+}
+
 // Shared error handler for non-ok text responses
 function throwOnError(res, text) {
   if (res.status === 403) throw new CanceledAccountError();
   let body;
   try { body = JSON.parse(text); } catch { body = {}; }
   if (res.status === 402) throw new InsufficientBalanceError(body.balanceUsd ?? null, body.message);
+  if (res.status === 429) {
+    if (body.error === 'anonymous_quota_exceeded') throw new AnonymousQuotaExceededError();
+    throw new Error(text);
+  }
   if (res.status === 500) {
     const firstLine = text.split('\n')[0];
     const details = text.includes('\n') ? text : null;
@@ -71,6 +83,7 @@ export async function sendMessage(message, sessionId, token) {
     const res = await fetch(`${API_BASE}/Chat`, {
       method: 'POST',
       headers: buildHeaders(token, false),
+      credentials: 'include',
       body,
     });
     if (res.status === 409 && attempt < maxRetries) {
@@ -97,7 +110,8 @@ export async function fetchChatHistory(token) {
 // Returns structured JSON array with { sender, text, timestamp, queryId } objects
 export async function fetchChatDialog(sessionId, token) {
   const res = await fetch(`${API_BASE}/Chat/Dialog?sessionId=${encodeURIComponent(sessionId)}`, {
-    headers: buildHeaders(token)
+    headers: buildHeaders(token),
+    credentials: 'include',
   });
   const text = await res.text();
   if (!res.ok) throwOnError(res, text);
@@ -107,7 +121,8 @@ export async function fetchChatDialog(sessionId, token) {
 // GET /api/chat/RetirementCalculatorInputs?sessionId=...&queryId=...
 export async function fetchRetirementInputs(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/RetirementCalculatorInputs?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token)
+    headers: buildHeaders(token),
+    credentials: 'include',
   });
   const text = await res.text();
   if (!res.ok) throwOnError(res, text);
@@ -117,7 +132,8 @@ export async function fetchRetirementInputs(sessionId, queryId, token) {
 // GET /api/chat/Chart?sessionId=...&queryId=...&chartType=...
 export async function fetchChart(sessionId, queryId, chartType, token) {
   const res = await fetch(`${API_BASE}/Chat/Chart?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}&chartType=${encodeURIComponent(chartType)}`, {
-    headers: buildHeaders(token)
+    headers: buildHeaders(token),
+    credentials: 'include',
   });
   const blob = await res.blob();
   if (!res.ok) throw new Error('Failed to load chart');
@@ -137,7 +153,8 @@ export async function fetchLatestChart(sessionId, chartType, token) {
 // GET /api/Chat/ChartHtml?sessionId=...&queryId=...&chartType=...
 export async function fetchChartHtml(sessionId, queryId, chartType, token) {
   const res = await fetch(`${API_BASE}/Chat/ChartHtml?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}&chartType=${encodeURIComponent(chartType)}`, {
-    headers: buildHeaders(token)
+    headers: buildHeaders(token),
+    credentials: 'include',
   });
   const html = await res.text();
   if (!res.ok) throw new Error('Failed to load chart');
@@ -158,7 +175,8 @@ export async function fetchLatestChartHtml(sessionId, chartType, token) {
 // Returns { status, balanceUsd?, queryCostUsd? }
 export async function fetchQueryStatus(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/QueryStatus?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token)
+    headers: buildHeaders(token),
+    credentials: 'include',
   });
   const text = await res.text();
   if (!res.ok) {
@@ -177,7 +195,8 @@ export async function fetchQueryStatus(sessionId, queryId, token) {
 // GET /api/chat/FlowsTable?sessionId=...&queryId=...
 export async function fetchFlowsTable(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/FlowsTable?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token)
+    headers: buildHeaders(token),
+    credentials: 'include',
   });
   const html = await res.text();
   if (!res.ok) throwOnError(res, html);
@@ -197,7 +216,8 @@ export async function fetchLatestFlowsTable(sessionId, token) {
 // GET /api/Chat/AnnualTable?sessionId=...&queryId=...
 export async function fetchAnnualTable(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/AnnualTable?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token)
+    headers: buildHeaders(token),
+    credentials: 'include',
   });
   const html = await res.text();
   if (!res.ok) throwOnError(res, html);
@@ -207,7 +227,8 @@ export async function fetchAnnualTable(sessionId, queryId, token) {
 // GET /api/Chat/SummaryTable?sessionId=...&queryId=...
 export async function fetchSummaryTable(sessionId, queryId, token) {
   const res = await fetch(`${API_BASE}/Chat/SummaryTable?sessionId=${encodeURIComponent(sessionId)}&queryId=${encodeURIComponent(queryId)}`, {
-    headers: buildHeaders(token)
+    headers: buildHeaders(token),
+    credentials: 'include',
   });
   const text = await res.text();
   if (!res.ok) throwOnError(res, text);
@@ -259,6 +280,7 @@ export async function postUserLogin(token) {
   const res = await fetch(`${API_BASE}/User/Login`, {
     method: 'POST',
     headers: buildHeaders(token, false),
+    credentials: 'include',
   });
   if (!res.ok) {
     if (res.status === 403) throw new CanceledAccountError();
