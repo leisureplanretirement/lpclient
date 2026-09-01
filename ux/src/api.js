@@ -83,10 +83,6 @@ function getAnonId() {
   try { return localStorage.getItem(ANON_ID_STORAGE_KEY) || null; } catch { return null; }
 }
 
-function clearAnonId() {
-  try { localStorage.removeItem(ANON_ID_STORAGE_KEY); } catch {}
-}
-
 // Adds the stored anon id (if any) to an already-built headers object.
 function withAnonId(headers) {
   const anonId = getAnonId();
@@ -315,7 +311,6 @@ export async function postUserLogin(token) {
     if (res.status === 403) throw new CanceledAccountError();
     return null;
   }
-  clearAnonId();
   return res.json();
 }
 
