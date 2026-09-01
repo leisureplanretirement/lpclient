@@ -112,6 +112,12 @@ export function markAuthenticated() {
   try { localStorage.setItem(HAS_AUTHENTICATED_KEY, 'true'); } catch {}
 }
 
+// GET /api/Ping?path=... — fire-and-forget page-view ping so route visits land in the
+// server's existing request logs, even for a visitor who never sends a chat query.
+export function pingPageView(path) {
+  fetch(`${API_BASE}/Ping?path=${encodeURIComponent(path)}`).catch(() => {});
+}
+
 // POST /api/chat
 export async function sendMessage(message, sessionId, token) {
   const payload = { message };

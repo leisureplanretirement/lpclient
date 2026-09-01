@@ -23,6 +23,7 @@ import {
   getBillingBalance,
   hasAuthenticatedBefore,
   markAuthenticated,
+  pingPageView,
   postUserLogin,
   sendMessage
 } from './api';
@@ -92,6 +93,16 @@ function CanceledRedirect({ canceled }) {
   useEffect(() => {
     if (canceled) navigate('/canceled', { replace: true });
   }, [canceled]);
+  return null;
+}
+
+// Pings the server on every route change so page visits land in its request logs,
+// even for a visitor who never sends a chat query.
+function PageViewLogger() {
+  const location = useLocation();
+  useEffect(() => {
+    pingPageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
   return null;
 }
 
@@ -704,6 +715,7 @@ function App() {
         <CssBaseline />
         <Router>
           <CanceledRedirect canceled={canceled} />
+          <PageViewLogger />
 
           <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
             <Banner canceled={canceled} />
