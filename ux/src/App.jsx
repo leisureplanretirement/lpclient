@@ -21,6 +21,8 @@ import {
   fetchRetirementInputs,
   fetchSummaryTable,
   getBillingBalance,
+  hasAuthenticatedBefore,
+  markAuthenticated,
   postUserLogin,
   sendMessage
 } from './api';
@@ -121,13 +123,13 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const [authError, setAuthError] = useState(null);
   const [loadedQueryHistory, setLoadedQueryHistory] = useState([]);
   const [chatPrefill, setChatPrefill] = useState('');
-  const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [quotaExceeded, setQuotaExceeded] = useState(() => hasAuthenticatedBefore());
   const [quotaDialogOpen, setQuotaDialogOpen] = useState(false);
 
   // Helper function to get appropriate welcome message based on auth state
   const getWelcomeMessage = (isAuth, exceeded = false) => {
     if (isAuth) return 'How can I help you plan your retirement?';
-    if (exceeded) return "You've used your 5 free questions. Log in to keep chatting.";
+    if (exceeded) return 'Log in to keep chatting.';
     return "Welcome to LeisurePlan.App! Try it free — ask up to 5 questions, no login required.";
   };
 
@@ -149,12 +151,16 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       const prevAuth = prevAuthRef.current;
       const currentAuth = isAuthenticated;
 
+      // A browser that has ever completed a real login is permanently ineligible for
+      // the anonymous trial, even after logging back out.
+      if (currentAuth) markAuthenticated();
+
       // User logged out - clear everything for security
       if (prevAuth && !currentAuth) {
-        setQuotaExceeded(false);
+        setQuotaExceeded(true);
         setMessages([{
           sender: 'agent',
-          text: getWelcomeMessage(false, false)
+          text: getWelcomeMessage(false, true)
         }]);
         setSessionId(null);
         setQueryId(null);

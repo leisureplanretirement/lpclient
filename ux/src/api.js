@@ -99,6 +99,19 @@ function captureAnonId(res) {
   }
 }
 
+// Once a browser has ever completed a real login, it's permanently ineligible for the
+// anonymous trial — client-side only (bypassable by clearing storage), but closes the
+// common case of logging in, logging out, and being offered a fresh trial.
+const HAS_AUTHENTICATED_KEY = 'lp_has_authenticated';
+
+export function hasAuthenticatedBefore() {
+  try { return localStorage.getItem(HAS_AUTHENTICATED_KEY) === 'true'; } catch { return false; }
+}
+
+export function markAuthenticated() {
+  try { localStorage.setItem(HAS_AUTHENTICATED_KEY, 'true'); } catch {}
+}
+
 // POST /api/chat
 export async function sendMessage(message, sessionId, token) {
   const payload = { message };
