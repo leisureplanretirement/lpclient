@@ -4,6 +4,7 @@ import NotesIcon from '@mui/icons-material/Notes';
 import { Alert, Box, Button, Collapse, Link, Paper, TextField, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useRef, useState } from 'react';
+import { trackSendConversionOnce } from '../analytics';
 import { useShowIds } from '../ShowIdsContext';
 
 // Component to display error message with expandable details
@@ -345,6 +346,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
   const handleSend = (e) => {
     e.preventDefault();
     if (inputValue.trim()) {
+      trackSendConversionOnce();
       setQueryHistory(prev => [...prev, inputValue]);
       setHistoryIndex(-1);
       setSavedInput('');

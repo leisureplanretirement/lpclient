@@ -40,7 +40,6 @@ The user then can enter further follow-up questions.
 
 ## Key Components
 
-- **ChatInput**: User text entry
 - **ChatWindow**: Message display with user/agent bubbles
 - **PollingProgressBar**: Shows polling progress during async processing
 - **ResultsWindow**: Charts + data tables
