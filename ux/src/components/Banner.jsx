@@ -4,6 +4,7 @@ import { AppBar, Avatar, Box, Button, Divider, IconButton, Menu, MenuItem, Toolb
 import { useTheme } from '@mui/material/styles';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fonts } from '../theme';
 
 const Banner = ({ canceled = false }) => {
   const theme = useTheme();
@@ -37,24 +38,27 @@ const Banner = ({ canceled = false }) => {
     logout({ logoutParams: { returnTo: window.location.origin + import.meta.env.BASE_URL } });
   };
 
+  const c = theme.palette.brand;
+  const go = (path) => () => handleNavigate(path);
+
   return (
-    <AppBar position="static" sx={{
+    <AppBar position="static" elevation={0} sx={{
       background: isDark
-        ? 'linear-gradient(90deg, #1e2433 0%, #2d1f5e 100%)'
-        : 'linear-gradient(90deg, #d1fae5 0%, #dbeafe 100%)',
-      boxShadow: 'none',
-      borderBottom: `1px solid ${isDark ? '#2d3748' : '#bfdbfe'}`,
+        ? `linear-gradient(90deg, ${c.parchment} 0%, ${c.surface} 100%)`
+        : `linear-gradient(90deg, ${c.parchment} 0%, ${c.goldSoft} 100%)`,
+      color: c.ink,
+      borderBottom: `1px solid ${c.line}`,
       width: '100%',
       flexShrink: 0,
     }}>
-      <Toolbar sx={{ width: '100%' }}>
+      <Toolbar sx={{ width: '100%', gap: 1 }}>
         {!canceled && (
           <>
             <IconButton
               edge="start"
               aria-label="menu"
               onClick={handleMenuOpen}
-              sx={{ mr: 2, color: isDark ? '#e2e8f0' : '#1e3a2e' }}
+              sx={{ mr: 1, color: c.ink }}
             >
               <MenuIcon />
             </IconButton>
@@ -63,23 +67,42 @@ const Banner = ({ canceled = false }) => {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
-              <MenuItem onClick={() => handleNavigate('/', { state: { newChat: Date.now() } })}>New Chat</MenuItem>
-              <MenuItem onClick={() => handleNavigate('/sessions')}>Sessions</MenuItem>
-              <MenuItem onClick={() => handleNavigate('/billing')}>Billing</MenuItem>
-              <MenuItem onClick={() => handleNavigate('/settings')}>Settings</MenuItem>
-              <MenuItem onClick={() => handleNavigate('/help')}>Help</MenuItem>
-              <MenuItem onClick={() => handleNavigate('/about')}>About</MenuItem>
+              <MenuItem onClick={() => handleNavigate('/', { state: { newChat: Date.now() } })}>New chat</MenuItem>
+              <MenuItem onClick={go('/portrait')}>My portrait &amp; wins</MenuItem>
+              <MenuItem onClick={go('/community')}>Community</MenuItem>
+              <Divider />
+              <MenuItem onClick={go('/sessions')}>Past chats</MenuItem>
+              <MenuItem onClick={go('/billing')}>Billing</MenuItem>
+              <MenuItem onClick={go('/settings')}>Settings</MenuItem>
+              <MenuItem onClick={go('/help')}>Help</MenuItem>
+              <MenuItem onClick={go('/about')}>About</MenuItem>
             </Menu>
           </>
         )}
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 700, color: isDark ? '#e2e8f0' : '#1e3a2e', textShadow: isDark ? '0 1px 8px rgba(167,139,250,0.18)' : 'none', lineHeight: 1.2, mb: 1 }}>
-            LeisurePlan.App
-          </Typography>
-          <Typography variant="caption" component="div" sx={{ color: isDark ? '#a78bfa' : '#4c1d95', letterSpacing: '0.08em', textTransform: 'none',fontWeight: 600, lineHeight: 1 }}>
-            Retirement Calculator
-          </Typography>
+        <Box
+          sx={{ flexGrow: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}
+          onClick={() => navigate('/')}
+        >
+          <Box aria-hidden sx={{
+            width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+            background: `radial-gradient(circle at 35% 30%, ${c.gold} 0%, ${c.coral} 55%, ${c.plum} 100%)`,
+            boxShadow: `0 0 0 3px ${c.goldSoft}`,
+          }} />
+          <Box sx={{ minWidth: 0 }}>
+            <Typography component="div" sx={{ fontFamily: fonts.display, fontWeight: 700, fontSize: '1.25rem', lineHeight: 1.1, color: c.ink }}>
+              LeisurePlan
+            </Typography>
+            <Typography component="div" noWrap sx={{ color: c.teal, fontSize: '0.78rem', fontWeight: 600, lineHeight: 1.2 }}>
+              Money calm, with room for fun
+            </Typography>
+          </Box>
         </Box>
+        {!canceled && (
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.5, mr: 1 }}>
+            <Button size="small" onClick={go('/portrait')} sx={{ color: c.ink }}>Portrait</Button>
+            <Button size="small" onClick={go('/community')} sx={{ color: c.ink }}>Community</Button>
+          </Box>
+        )}
         {!isLoading && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {isAuthenticated ? (
@@ -102,23 +125,13 @@ const Banner = ({ canceled = false }) => {
                     <Typography variant="body2">{user?.name || user?.email}</Typography>
                   </MenuItem>
                   <Divider />
-                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                  <MenuItem onClick={() => { setUserAnchorEl(null); navigate('/portrait'); }}>My portrait</MenuItem>
+                  <MenuItem onClick={handleLogout}>Log out</MenuItem>
                 </Menu>
               </>
             ) : (
-              <Button
-                variant="outlined"
-                onClick={handleLogin}
-                sx={{
-                  borderColor: isDark ? 'rgba(100, 181, 246, 0.5)' : 'rgba(30, 58, 46, 0.4)',
-                  color: isDark ? '#93c5fd' : '#1e3a2e',
-                  '&:hover': {
-                    borderColor: isDark ? '#93c5fd' : '#1e3a2e',
-                    backgroundColor: isDark ? 'rgba(100, 181, 246, 0.08)' : 'rgba(30, 58, 46, 0.06)',
-                  }
-                }}
-              >
-                Login
+              <Button variant="contained" color="primary" onClick={handleLogin}>
+                Log in
               </Button>
             )}
           </Box>

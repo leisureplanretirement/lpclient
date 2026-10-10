@@ -1,11 +1,51 @@
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import EmailIcon from '@mui/icons-material/Email';
 import NotesIcon from '@mui/icons-material/Notes';
-import { Alert, Box, Button, Collapse, Link, Paper, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Chip, Collapse, Link, Paper, TextField, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useRef, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { trackSendConversionOnce } from '../analytics';
+import { ACCOUTREMENTS } from '../avatar/avatarSchema';
 import { useShowIds } from '../ShowIdsContext';
+import { fonts } from '../theme';
+import { splitWins } from '../wins';
+
+// Starter questions drawn from the most common money worries of people in their twenties.
+const STARTERS = [
+  'Help me build a budget that still has room for fun',
+  'How big should my emergency fund be?',
+  "I have credit card debt — where do I start?",
+  'Should I contribute to my 401(k) match?',
+  'Is sports betting or crypto a bad idea for me?',
+  'I feel behind compared to my friends',
+  "I'm 26, earn $62k, rent is $1,600 — will my savings grow?",
+];
+
+// Gold-leaf card shown under a coach reply that recognised a prudent decision.
+const WinBadge = ({ win }) => {
+  const theme = useTheme();
+  const c = theme.palette.brand;
+  const item = ACCOUTREMENTS[win.key];
+  return (
+    <Box sx={{
+      mt: 1.5, p: 1.5, display: 'flex', gap: 1.5, alignItems: 'center',
+      borderRadius: 3, border: `1px solid ${c.gold}`,
+      background: `linear-gradient(120deg, ${c.goldSoft} 0%, ${c.paper} 100%)`,
+    }}>
+      <Box aria-hidden sx={{ fontSize: 28, lineHeight: 1 }}>🏅</Box>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography sx={{ fontFamily: fonts.display, fontWeight: 700, color: c.ink }}>
+          Win: {win.title}
+        </Typography>
+        <Typography variant="body2" sx={{ color: c.inkSoft }}>
+          Your portrait earned the <strong>{item?.label ?? win.key}</strong>.{' '}
+          <Link component={RouterLink} to="/portrait">See it</Link>
+        </Typography>
+      </Box>
+    </Box>
+  );
+};
 
 // Component to display error message with expandable details
 const ErrorMessage = ({ text, details }) => {
@@ -82,8 +122,8 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
     textTransform: 'uppercase',
     padding: '3px 9px',
     borderRadius: '99px',
-    backgroundColor: theme.palette.mode === 'dark' ? '#1f3a3a' : '#ccfbf1',
-    color: theme.palette.mode === 'dark' ? '#2dd4bf' : '#0f766e',
+    backgroundColor: theme.palette.brand.tealSoft,
+    color: theme.palette.brand.teal,
     mb: 0.5,
   };
 
@@ -283,6 +323,7 @@ const MessageArtifacts = ({ artifacts, queryId, sessionId, onOpenFlowsTable, onO
 
 const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId, shouldScrollToBottom, onScrollComplete, sessionId, isAuthenticated, quotaExceeded, isImpersonating, lowBalance, loadedQueryHistory, prefillText, onPrefillConsumed, onOpenFlowsTable, onOpenAnnualTable, onEditField, isAdmin, onAdminClick }) => {
   const theme = useTheme();
+  const c = theme.palette.brand;
   const { showIds } = useShowIds();
   const [inputValue, setInputValue] = useState('');
   const [queryHistory, setQueryHistory] = useState([]);
@@ -404,7 +445,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
           display: 'flex',
           flexDirection: 'column',
           gap: 2,
-          backgroundColor: theme.palette.mode === 'dark' ? '#0f1117' : '#f0f2f5',
+          backgroundColor: c.parchment,
         }}
       >
         {showIds && sessionId && (
@@ -432,33 +473,40 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             minHeight: 200,
           }}>
             <Paper elevation={0} sx={{
-              p: 4,
+              p: { xs: 3, sm: 4 },
               textAlign: 'center',
-              maxWidth: 400,
-              borderRadius: '14px',
-              border: `1px solid ${theme.palette.mode === 'dark' ? '#2d3748' : '#d1d9e0'}`,
-              backgroundColor: theme.palette.mode === 'dark' ? '#1e2433' : '#ffffff',
+              maxWidth: 560,
+              borderRadius: '24px',
+              border: `1px solid ${c.line}`,
+              backgroundColor: c.paper,
             }}>
-              <Typography variant="h6" gutterBottom>
+              <Typography sx={{ fontFamily: fonts.display, fontWeight: 700, fontSize: { xs: '1.5rem', sm: '1.9rem' }, lineHeight: 1.2, mb: 1, color: c.ink }}>
+                Money stuff, minus the panic.
+              </Typography>
+              <Typography variant="body1" sx={{ color: c.inkSoft, mb: 2.5 }}>
+                Ask anything — budgeting, debt, saving for a trip, or that 3am "am I going to be okay?" feeling.
+                No judgment, and every sensible move you make earns a little something for your portrait.
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', mb: 2.5 }}>
+                {STARTERS.map(q => (
+                  <Chip
+                    key={q}
+                    label={q}
+                    variant="outlined"
+                    disabled={!canSend || isImpersonating}
+                    onClick={() => { setInputValue(q); inputRef.current?.focus(); }}
+                    sx={{ borderColor: c.line, bgcolor: c.parchment, color: c.ink, height: 'auto', py: 0.75, '& .MuiChip-label': { whiteSpace: 'normal' }, '&:hover': { borderColor: c.teal } }}
+                  />
+                ))}
+              </Box>
+              <Typography variant="body2" sx={{ color: c.inkSoft }}>
                 {isAuthenticated
-                  ? 'To start, enter your question below.'
+                  ? 'Pick a starter or type your own question below.'
                   : quotaExceeded
-                    ? 'Log in to keep chatting.'
-                    : 'Try it free — ask up to 5 questions below, no login required.'}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                For examples see{' '}
-                <Link href="/help/SampleQueries.html" target="_blank" rel="noopener noreferrer">
-                  here
-                </Link>
-                .
-              </Typography>
-              <Typography variant="body1">
-                For questions, or support issues, click{' '}
-                <Link href="mailto:leisureplansupport@gmail.com">
-                  here
-                </Link>
-                .
+                    ? 'Log in to keep chatting — your portrait and wins come with you.'
+                    : 'Try it free — up to 5 questions, no login needed.'}
+                {' '}Want to design your portrait first?{' '}
+                <Link component={RouterLink} to="/portrait">Open the studio</Link>.
               </Typography>
             </Paper>
           </Box>
@@ -472,14 +520,10 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
               p: 2,
               maxWidth: msg.sender === 'user' ? '80%' : '100%',
               alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-              borderRadius: '14px',
               border: '1px solid',
-              borderColor: msg.sender === 'user'
-                ? (theme.palette.mode === 'dark' ? 'rgba(167, 139, 250, 0.45)' : 'rgba(139, 92, 246, 0.3)')
-                : (theme.palette.mode === 'dark' ? '#2d3748' : '#d1d9e0'),
-              backgroundColor: msg.sender === 'user'
-                ? (theme.palette.mode === 'dark' ? 'rgba(167, 139, 250, 0.12)' : '#ede9fe')
-                : (theme.palette.mode === 'dark' ? '#1e2433' : '#ffffff'),
+              borderColor: msg.sender === 'user' ? c.teal : c.line,
+              backgroundColor: msg.sender === 'user' ? c.tealSoft : c.paper,
+              borderRadius: msg.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
               wordBreak: 'break-word',
@@ -496,14 +540,14 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
                 padding: '3px 9px',
                 borderRadius: '99px',
                 ...(msg.sender === 'user' ? {
-                  backgroundColor: theme.palette.mode === 'dark' ? '#1e3a5f' : '#dbeafe',
-                  color: theme.palette.mode === 'dark' ? '#60a5fa' : '#1d4ed8',
+                  backgroundColor: c.paper,
+                  color: c.teal,
                 } : {
-                  backgroundColor: theme.palette.mode === 'dark' ? '#1a3a2e' : '#d1fae5',
-                  color: theme.palette.mode === 'dark' ? '#4ade80' : '#15803d',
+                  backgroundColor: c.coralSoft,
+                  color: c.coral,
                 }),
               }}>
-                {msg.sender === 'user' ? 'You' : 'Assistant'}
+                {msg.sender === 'user' ? 'You' : 'Coach'}
               </Typography>
             </Box>
             {msg.sender === 'agent' ? (
@@ -536,7 +580,15 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
                       backgroundColor: theme.palette.action.hover,
                     }
                   }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{normalizeLatexDelimiters(msg.text)}</ReactMarkdown>
+                    {(() => {
+                      const { body, wins } = splitWins(msg.text);
+                      return (
+                        <>
+                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{normalizeLatexDelimiters(body)}</ReactMarkdown>
+                          {wins.map(w => <WinBadge key={w.key} win={w} />)}
+                        </>
+                      );
+                    })()}
                   </Box>
                 )}
                 {showIds && msg.queryId && (
@@ -607,7 +659,7 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             fullWidth
             variant="outlined"
             size="small"
-            placeholder={canSend ? "Type your question..." : "Log in to continue..."}
+            placeholder={canSend ? "Ask anything about money — no judgment…" : "Log in to keep chatting…"}
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -617,9 +669,9 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             inputRef={inputRef}
             sx={{
               '& .MuiOutlinedInput-root': {
-                '& fieldset': { borderColor: '#a78bfa' },
-                '&:hover fieldset': { borderColor: '#c4b5fd' },
-                '&.Mui-focused fieldset': { borderColor: '#a78bfa' },
+                '& fieldset': { borderColor: c.line },
+                '&:hover fieldset': { borderColor: c.teal },
+                '&.Mui-focused fieldset': { borderColor: c.teal },
               },
             }}
           />
@@ -627,13 +679,8 @@ const ChatWindow = ({ messages, onSend, loading, onQueryIdClick, selectedQueryId
             type="submit"
             variant="contained"
             disabled={loading || !inputValue.trim() || !canSend || isImpersonating || lowBalance}
-            sx={{
-              minWidth: 80,
-              backgroundColor: '#a78bfa',
-              color: '#1e1b4b',
-              '&:hover': { backgroundColor: '#c4b5fd' },
-              '&.Mui-disabled': { backgroundColor: theme.palette.mode === 'dark' ? '#2d1f5e' : '#ede9fe', color: theme.palette.mode === 'dark' ? '#6d5fa8' : '#a78bfa' },
-            }}
+            color="secondary"
+            sx={{ minWidth: 80 }}
           >
             Send
           </Button>

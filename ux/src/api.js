@@ -458,3 +458,96 @@ export async function updateSession(sessionId, name, token) {
     throwOnError(res, text);
   }
 }
+
+// Thrown when community moderation rejects a post/comment (HTTP 422). `message` is a kind,
+// human-readable explanation to show the author.
+export class ModerationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ModerationError';
+  }
+}
+
+// Shared JSON helper for the profile and forum endpoints.
+async function jsonRequest(path, { method = 'GET', token, body } = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: buildHeaders(token, method === 'GET'),
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const text = await res.text();
+  if (res.status === 422) {
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = {}; }
+    throw new ModerationError(parsed.error || 'Please rephrase and try again.');
+  }
+  if (!res.ok) {
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = {}; }
+    if (parsed.error && res.status !== 403) throw new Error(parsed.error);
+    throwOnError(res, text);
+  }
+  return text ? JSON.parse(text) : null;
+}
+
+// ---- Profile: portrait avatar, handle, wins ----
+
+// GET /api/Profile → { userId, handle, avatar, wins: [{ id, accoutrement, title, earnedAt }], updatedAt }
+export const fetchProfile = (token) => jsonRequest('/Profile', { token });
+
+// PUT /api/Profile/Avatar
+export const saveAvatar = (avatar, token) => jsonRequest('/Profile/Avatar', { method: 'PUT', token, body: avatar });
+
+// PUT /api/Profile/Handle
+export const saveHandle = (handle, token) => jsonRequest('/Profile/Handle', { method: 'PUT', token, body: { handle } });
+
+// POST /api/Profile/Wins → { profile, newlyEarned }
+export const recordWin = (accoutrement, title, token) =>
+  jsonRequest('/Profile/Wins', { method: 'POST', token, body: { accoutrement, title } });
+
+// POST /api/Profile/AvatarChat → { reply, avatar, done }
+export const avatarChat = (messages, avatar, token) =>
+  jsonRequest('/Profile/AvatarChat', { method: 'POST', token, body: { messages, avatar } });
+
+// ---- Community forum ----
+
+// GET /api/Forum/Flairs → string[]
+export const fetchForumFlairs = () => jsonRequest('/Forum/Flairs');
+
+// GET /api/Forum/Posts?sort=hot|new|top&flair=... → [{ post, myVote }]
+export function fetchForumPosts(sort, flair, token) {
+  const params = new URLSearchParams({ sort });
+  if (flair) params.set('flair', flair);
+  return jsonRequest(`/Forum/Posts?${params}`, { token });
+}
+
+// GET /api/Forum/Posts/{id} → { post, myVote, comments: [{ comment, myVote, replies: [...] }] }
+export const fetchForumThread = (postId, token) => jsonRequest(`/Forum/Posts/${encodeURIComponent(postId)}`, { token });
+
+// POST /api/Forum/Posts → post
+export const createForumPost = ({ title, body, flair }, token) =>
+  jsonRequest('/Forum/Posts', { method: 'POST', token, body: { title, body, flair } });
+
+// POST /api/Forum/Posts/{id}/Comments → comment
+export const createForumComment = (postId, body, parentCommentId, token) =>
+  jsonRequest(`/Forum/Posts/${encodeURIComponent(postId)}/Comments`, {
+    method: 'POST', token, body: { body, parentCommentId: parentCommentId || null },
+  });
+
+// POST /api/Forum/Posts/{id}/Vote → new score (number)
+export const voteForumPost = (postId, direction, token) =>
+  jsonRequest(`/Forum/Posts/${encodeURIComponent(postId)}/Vote`, { method: 'POST', token, body: { direction } });
+
+// POST /api/Forum/Posts/{postId}/Comments/{commentId}/Vote → new score (number)
+export const voteForumComment = (postId, commentId, direction, token) =>
+  jsonRequest(`/Forum/Posts/${encodeURIComponent(postId)}/Comments/${encodeURIComponent(commentId)}/Vote`, {
+    method: 'POST', token, body: { direction },
+  });
+
+// DELETE /api/Forum/Posts/{id}
+export const deleteForumPost = (postId, token) =>
+  jsonRequest(`/Forum/Posts/${encodeURIComponent(postId)}`, { method: 'DELETE', token });
+
+// DELETE /api/Forum/Posts/{postId}/Comments/{commentId}
+export const deleteForumComment = (postId, commentId, token) =>
+  jsonRequest(`/Forum/Posts/${encodeURIComponent(postId)}/Comments/${encodeURIComponent(commentId)}`, { method: 'DELETE', token });
