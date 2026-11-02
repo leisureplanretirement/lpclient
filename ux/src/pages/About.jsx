@@ -3,22 +3,22 @@ import { Box, Divider, Link, Typography } from '@mui/material';
 const About = () => {
   return (
     <Box sx={{ p: 3, maxWidth: 640, overflowY: 'auto', height: '100%' }}>
-	<Typography variant="h5" sx={{ mb: 3 }}>
-	    About LeisurePlan.App
+	<Typography variant="h4" component="h1" sx={{ mb: 3 }}>
+	    About LeisurePlan
 	</Typography>
 
 	<Typography variant="body1" sx={{ mb: 2 }}>
-	    LeisurePlan.App is an interactive retirement planning platform that helps you understand,
-	    model, and take control of your financial future. Instead of static spreadsheets or
-	    one-size-fits-all calculators, LeisurePlan uses a conversational interface to explore
-	    personalized retirement scenarios in a simple and intuitive way.
+	    LeisurePlan is a money app for your twenties that cares less about squeezing out every last
+	    dollar and more about how you feel: confident that nothing seriously bad is going to happen,
+	    proud of the sensible choices you make, and free to spend on the trips, hobbies and friends
+	    that make life good.
 	</Typography>
 
 	<Typography variant="body1" sx={{ mb: 3 }}>
-	    You can simulate "what if" decisions, analyze cash flows over time, and examine detailed
-	    annual and monthly projections to see how your choices play out across your lifetime.
-	    Our mission is to make retirement planning clear, engaging, and actionable; empowering
-	    you to make informed decisions with confidence and adapt your plan as your life evolves.
+	    It's not extreme frugality and it's not get-rich-quick. It's a steady middle path: a solid
+	    safety net first, then room for fun. You chat with a judgment-free money coach, see your
+	    cash flow mapped out month by month, design a Renaissance-style portrait that gathers
+	    keepsakes as you make prudent moves, and learn alongside others in the community.
 	</Typography>
 
 	<Typography variant="h6" sx={{ mb: 2 }}>
@@ -26,14 +26,10 @@ const About = () => {
 	</Typography>
 
 	<Typography variant="body1" sx={{ mb: 3 }}>
-	    LeisurePlan.App was created out of a practical frustration. Traditional spreadsheets
-	    quickly become unwieldy when modeling real retirement scenarios; multiple income streams,
-	    taxes, investment growth, uncertainty, and changing life decisions all interact in complex
-	    ways. At the same time, many existing web-based calculators provide only simplified
-	    projections and often act as lead generators for financial advisory services rather than
-	    tools for deep, independent exploration. LeisurePlan.App was built to bridge this gap;
-	    combining the flexibility of advanced modeling with an interface designed for exploration,
-	    not sales pressure.
+	    LeisurePlan began as a detailed planning engine built out of frustration with spreadsheets
+	    and with online calculators that are really lead generators for advisers. The same engine —
+	    month-by-month cash flows, taxes, inflation and investment growth — now powers a friendlier
+	    experience for people just getting started, built for exploration, not sales pressure.
 	</Typography>
 
 	<Typography variant="h6" sx={{ mb: 2 }}>

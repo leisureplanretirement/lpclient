@@ -1,68 +1,61 @@
 import { Box, Divider, Link, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 
-const Help = () => {
-  return (
-    <Box sx={{ p: 3, maxWidth: 640, height: '100%', overflowY: 'auto' }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>Help</Typography>
+const Section = ({ title, children }) => (
+  <>
+    <Typography variant="h6" sx={{ mb: 1 }}>{title}</Typography>
+    <Typography component="div" variant="body2" sx={{ mb: 3, '& p': { mt: 0, mb: 1 } }}>{children}</Typography>
+    <Divider sx={{ mb: 3 }} />
+  </>
+);
 
-      <Typography variant="h6" sx={{ mb: 1 }}>Getting Started</Typography>
-      <Typography variant="body2" sx={{ mb: 1 }}>
-        LeisurePlan.App uses a conversational interface. Simply type a question or
-        instruction in the chat box and the assistant will guide you through building
-        your retirement plan.
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 3 }}>
-        Not sure what to ask?{' '}
-        <Link href="/help/SampleQueries.html" target="_blank" rel="noopener noreferrer">
-          Browse sample queries
-        </Link>{' '}
-        for ideas across a range of retirement planning topics.
-      </Typography>
+const Help = () => (
+  <Box sx={{ p: 3, maxWidth: 680, height: '100%', overflowY: 'auto' }}>
+    <Typography variant="h4" component="h1" sx={{ mb: 3 }}>How LeisurePlan works</Typography>
 
-      <Divider sx={{ my: 3 }} />
+    <Section title="Chat with your money coach">
+      <p>Just type like you'd text a friend who's good with money. Ask about budgeting, emergency funds,
+        student loans, credit cards, your credit score, rent, saving for a trip, investing basics, or that
+        anxious "am I behind?" feeling. No judgment, ever.</p>
+      <p>Not sure where to start?{' '}
+        <Link href="/help/SampleQueries.html" target="_blank" rel="noopener noreferrer">Browse sample questions</Link>.</p>
+    </Section>
 
-      <Typography variant="h6" sx={{ mb: 1 }}>Sessions</Typography>
-      <Typography variant="body2" sx={{ mb: 3 }}>
-        Your conversations are saved as sessions. Use the <strong>Sessions</strong> menu
-        item to view, reload, rename, or delete past sessions.
-      </Typography>
+    <Section title="See your money month by month">
+      <p>Share what you earn (before tax, if you know it), what you spend each month and what you've saved,
+        and LeisurePlan maps your cash flow forward — charts of money in and out, and how your savings grow.
+        Ask "what if" questions any time: a raise, a pricier apartment, a big trip.</p>
+    </Section>
 
-      <Divider sx={{ my: 3 }} />
+    <Section title="Your portrait & wins">
+      <p>Design a full-length portrait in the style of Renaissance Florence, Venice, Flanders or Tudor England,
+        or Ming China, Edo Japan, Mughal India or Joseon Korea — just by chatting with the painter in the{' '}
+        <Link component={RouterLink} to="/portrait">portrait studio</Link>.</p>
+      <p>When you tell the coach about a sensible move you've made — starting an emergency fund, paying off a
+        card, capturing your 401(k) match — it's recognised as a <strong>win</strong> and a symbolic keepsake
+        (a shield, a laurel crown, keys, an hourglass…) appears in your portrait.</p>
+    </Section>
 
-      <Typography variant="h6" sx={{ mb: 1 }}>Starting a New Chat</Typography>
-      <Typography variant="body2" sx={{ mb: 3 }}>
-        Select <strong>New Chat</strong> from the menu at any time to start a fresh
-        session without losing your previous ones.
-      </Typography>
+    <Section title="Community">
+      <p>The <Link component={RouterLink} to="/community">community</Link> is where members ask questions,
+        share wins and swap tips. Upvote what helps. Keep it kind: no bad language and no insulting other
+        members — critique ideas, not people. Posts are checked automatically before they appear.</p>
+    </Section>
 
-      <Divider sx={{ my: 3 }} />
+    <Section title="Past chats">
+      <p>Your conversations are saved. Open <strong>Past chats</strong> from the menu to reload, rename or delete them,
+        or choose <strong>New chat</strong> to start fresh.</p>
+    </Section>
 
-      <Typography variant="h6" sx={{ mb: 1 }}>Results</Typography>
-      <Typography variant="body2">
-        Charts and tables appear in the results panel on the right. You can drag the
-        divider between the chat and results panels to resize them.
-      </Typography>
-
-      <Divider sx={{ my: 3 }} />
-
-      <Typography variant="h6" sx={{ mb: 2 }}>Calculator Details</Typography>
-      <Typography variant="body2">
-        <Link href="/help/Inflation.html" target="_blank" rel="noopener noreferrer">
-          How Inflation Works
-        </Link>
-      </Typography>
-      <Typography variant="body2">
-        <Link href="/help/MarketROR.html" target="_blank" rel="noopener noreferrer">
-          How Market Rate of Return Works
-        </Link>
-      </Typography>
-      <Typography variant="body2">
-        <Link href="/help/SocialSecurity.html" target="_blank" rel="noopener noreferrer">
-          How Social Security Works
-        </Link>
-      </Typography>
-    </Box>
-  );
-};
+    <Typography variant="h6" sx={{ mb: 1 }}>How the projections are calculated</Typography>
+    <Typography variant="body2">
+      <Link href="/help/Inflation.html" target="_blank" rel="noopener noreferrer">Inflation</Link>
+      {' · '}
+      <Link href="/help/MarketROR.html" target="_blank" rel="noopener noreferrer">Investment growth</Link>
+      {' · '}
+      <Link href="/help/SocialSecurity.html" target="_blank" rel="noopener noreferrer">Social Security</Link>
+    </Typography>
+  </Box>
+);
 
 export default Help;

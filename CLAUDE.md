@@ -45,3 +45,21 @@ VITE_STRIPE_PRICE_10=price_xxx
 VITE_STRIPE_PRICE_25=price_xxx
 VITE_STRIPE_PRICE_50=price_xxx
 ```
+
+## Audience and look (youth-reskin)
+
+The app now targets 20–30 year olds who want budgeting help, financial education and, above all, emotional security; copy should be warm, plain and never judgmental. The "Gilded Calm" theme lives in `src/theme.js`: use `theme.palette.brand` tokens (teal, coral, gold, plum, parchment, surface, line, ink, inkSoft…) and `fonts.display` (Fraunces) for headings instead of hardcoded colours, so light and dark mode both work.
+
+### Portraits and wins
+- `src/avatar/avatarSchema.js` is the avatar vocabulary; it must match lpserver's `Community/Avatar/AvatarCatalog.cs`. `AvatarPortrait.jsx` renders a spec as SVG; `AvatarGallery.jsx` is an unrouted visual-QA grid.
+- `src/pages/PortraitStudio.jsx` (`/portrait`) builds the avatar through conversation: the server painter (`POST /api/Profile/AvatarChat`) when logged in, the offline `src/avatar/localPainter.js` otherwise or on failure.
+- The coach marks prudent decisions with `🏅 **Win:** … {win:<key>}`. `src/wins.js` strips the marker (ChatWindow renders a badge instead) and records the win — server for members, local storage for visitors. Wins are only claimed for fresh replies, never when reloading history.
+
+### Community
+`src/pages/Community.jsx` (`/community`) and `CommunityThread.jsx` (`/community/:postId`), with shared pieces in `src/components/community/`. Moderation rejections arrive as `ModerationError` (HTTP 422) and are shown gently next to the draft; post bodies are rendered as plain text, never HTML/markdown.
+
+### Running against a local server
+`scripts/start-local.sh` runs the dev server on :5173 against a local Web.Api (default `http://127.0.0.1:7299`). Start the server side first with lpserver's `scripts/local-test/start-model.sh` and `start-server.sh`; full instructions in lpserver `Documents/LocalDevelopment.md`.
+
+### Installing
+`npm install` fails on the `node` package's install script; use `npm install --ignore-scripts`.

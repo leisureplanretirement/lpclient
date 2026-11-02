@@ -38,6 +38,9 @@ import About from './pages/About';
 import AccountCanceled from './pages/AccountCanceled';
 import Admin from './pages/Admin';
 import Billing from './pages/Billing';
+import Community from './pages/Community';
+import CommunityThread from './pages/CommunityThread';
+import PortraitStudio from './pages/PortraitStudio';
 import Help from './pages/Help';
 import Plans from './pages/Plans';
 import PleaseVerify from './pages/PleaseVerify';
@@ -47,6 +50,7 @@ import Sessions from './pages/Sessions';
 import Settings from './pages/Settings';
 import { ShowIdsContext } from './ShowIdsContext';
 import { createAppTheme } from './theme';
+import { claimWin, extractWins } from './wins';
 
 
 // Transform API dialog messages to match UI expectations
@@ -136,12 +140,13 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
   const [chatPrefill, setChatPrefill] = useState('');
   const [quotaExceeded, setQuotaExceeded] = useState(() => hasAuthenticatedBefore());
   const [quotaDialogOpen, setQuotaDialogOpen] = useState(false);
+  const [winToast, setWinToast] = useState(null);
 
   // Helper function to get appropriate welcome message based on auth state
   const getWelcomeMessage = (isAuth, exceeded = false) => {
-    if (isAuth) return 'How can I help you plan your retirement?';
-    if (exceeded) return 'Log in to keep chatting.';
-    return "Welcome to LeisurePlan.App! Try it free — ask up to 5 questions, no login required.";
+    if (isAuth) return "Hey! What's on your mind money-wise? Budgets, debt, a trip you're saving for, or just a worry you want to talk through — all welcome.";
+    if (exceeded) return 'Log in to keep chatting — your portrait and wins will be waiting.';
+    return "Welcome to LeisurePlan 👋 I'm your money coach. Ask me anything — try it free for up to 5 questions, no login needed.";
   };
 
   // Set initial welcome message after Auth0 finishes loading
@@ -310,7 +315,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       setQueryId(res.chatQueryId);
       setSelectedQueryId(res.chatQueryId); // Auto-select the new query
       isNewQueryRef.current = true; // Mark this as a new query (not a historical click)
-      setMessages((msgs) => [...msgs, { sender: 'agent', text: res.reply || 'Message sent. Waiting for results...', queryId: res.chatQueryId }]);
+      setMessages((msgs) => [...msgs, { sender: 'agent', text: res.reply || 'Thinking it through…', queryId: res.chatQueryId }]);
       pollQueryStatus(res.chatSessionId, res.chatQueryId);
     } catch (e) {
       if (e instanceof AnonymousQuotaExceededError) {
@@ -360,9 +365,9 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
             ));
           }
         } else if (status === 'Failed') {
-          setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Sorry, but something failed. Please try again.' }]);
+          setMessages((msgs) => [...msgs, { sender: 'agent', text: "Sorry — something went wrong on my side. Mind trying that again?" }]);
         } else if (status === 'Timeout') {
-          setMessages((msgs) => [...msgs, { sender: 'agent', text: 'Query timed out, try again.' }]);
+          setMessages((msgs) => [...msgs, { sender: 'agent', text: 'That took longer than it should. Please try again in a moment.' }]);
         }
       } catch (e) {
         if (e instanceof CanceledAccountError) { onCanceled(); return; }
@@ -401,19 +406,19 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
     const images = [
       data.flowsHtml ? {
         html: data.flowsHtml,
-        alt: 'Flows Chart',
+        alt: 'Money In & Out',
         chartThumbnail: data.flowsThumbnail || null,
         tableType: 'flows',
         tableThumbnail: '/MonthlyCashFlowAnalysis.png',
-        tableLabel: 'Monthly Details',
+        tableLabel: 'Month by Month',
       } : null,
       data.balancesHtml ? {
         html: data.balancesHtml,
-        alt: 'Balances Chart',
+        alt: 'Savings Over Time',
         chartThumbnail: data.balancesThumbnail || null,
         tableType: 'annual',
         tableThumbnail: '/AnnualCashFlowAnalysis.png',
-        tableLabel: 'Annual Details',
+        tableLabel: 'Year by Year',
       } : null,
     ].filter(Boolean);
 
@@ -425,7 +430,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       const ia = ri.retirementPlanningSimulationInputs?.investorAssumptions ?? {};
 
       tables.push({
-        title: 'Retiree Personal Data',
+        title: 'About You',
         headers: ['Field', 'Value'],
         rows: ri.retirementPlanningSimulationInputs?.retireePersonalData
           ? Object.entries(ri.retirementPlanningSimulationInputs.retireePersonalData)
@@ -433,7 +438,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         rowGroup: 0,
       });
       tables.push({
-        title: 'Simulation Settings and Assumptions',
+        title: 'Projection Settings',
         headers: ['Setting', 'Value'],
         rows: formatEntries({
           ...Object.fromEntries(Object.entries(ss).filter(([k]) => !['annualMedicalInflationRate', 'marketROR', 'annualInflationRate', 'socialSecurityColaRate'].includes(k))),
@@ -442,7 +447,7 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         rowGroup: 0,
       });
       tables.push({
-        title: 'Investor Assumptions',
+        title: 'Assumptions',
         headers: ['Setting', 'Value'],
         rows: formatEntries({
           ...Object.fromEntries(Object.entries(ia).filter(([k]) => !['medicareDeductible', 'medigapPartGPremium', 'medicareStartDate', 'stateIncomeTaxRate'].includes(k))),
@@ -489,14 +494,24 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
             }
             return newMsgs;
           });
-          // Only scroll if this is a NEW query (not a historical click)
+          // Only scroll (and celebrate) if this is a NEW query (not a historical click)
           if (isNewQueryRef.current) {
             setShouldScrollToBottom(true);
+            celebrateWins(lastAssistantMessage.text);
           }
         }
       }
     } catch (e) {
       console.error('Failed to update messages from dialog:', e);
+    }
+  };
+
+  // Records any win the coach recognised in a fresh reply and toasts newly earned accoutrements.
+  const celebrateWins = async (text) => {
+    for (const win of extractWins(text)) {
+      const token = isAuthenticated ? await getAccessTokenSilently().catch(() => undefined) : undefined;
+      const { newlyEarned } = await claimWin(win.key, win.title, token);
+      if (newlyEarned) setWinToast(win);
     }
   };
 
@@ -556,26 +571,41 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
         </Alert>
       </Snackbar>
 
+      <Snackbar
+        open={!!winToast}
+        autoHideDuration={7000}
+        onClose={() => setWinToast(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          icon={<span aria-hidden>🏅</span>}
+          severity="success"
+          onClose={() => setWinToast(null)}
+          action={<Button color="inherit" size="small" onClick={() => { setWinToast(null); navigate('/portrait'); }}>See portrait</Button>}
+        >
+          Win unlocked — {winToast?.title}
+        </Alert>
+      </Snackbar>
+
       <Dialog open={welcomeOpen} onClose={() => setWelcomeOpen(false)}>
-        <DialogTitle>Welcome to LeisurePlan!</DialogTitle>
+        <DialogTitle>Welcome to LeisurePlan 🎉</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            You have ${welcomeBalance?.toFixed(2)} in free credit ready to use. You should get about several queries/dollar.
+            You've got ${welcomeBalance?.toFixed(2)} in free credit — that's plenty of questions to get going.
           </DialogContentText>
           <DialogContentText sx={{ mt: 2 }}>
-            To get started, ask me anything about planning for retirement. See the <a href="/help">Help page</a> for examples.
-          </DialogContentText>
-          <DialogContentText sx={{ mt: 2 }}>
-            Or you can ask what the app itself what it can do.
+            Ask anything: budgeting with room for fun, building an emergency fund, tackling debt, or whether
+            you're on track. Every sensible move you tell us about earns your portrait a new keepsake.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setWelcomeOpen(false)} autoFocus>Get Started</Button>
+          <Button onClick={() => { setWelcomeOpen(false); navigate('/portrait'); }}>Design my portrait</Button>
+          <Button variant="contained" onClick={() => setWelcomeOpen(false)} autoFocus>Let's go</Button>
         </DialogActions>
       </Dialog>
 
       <Dialog open={!!authError} onClose={() => setAuthError(null)}>
-        <DialogTitle>Login Failed</DialogTitle>
+        <DialogTitle>Login didn't go through</DialogTitle>
         <DialogContent>
           <DialogContentText>{authError}</DialogContentText>
           <DialogContentText sx={{ mt: 2 }}>
@@ -588,10 +618,11 @@ function MainChat({ onBalanceUpdate, onCanceled }) {
       </Dialog>
 
       <Dialog open={quotaDialogOpen} onClose={() => setQuotaDialogOpen(false)}>
-        <DialogTitle>Free questions used</DialogTitle>
+        <DialogTitle>Nice start!</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            You've used your 5 free questions. Log in to keep chatting — it only takes a moment.
+            You've used your 5 free questions. Log in to keep chatting — it takes a moment, and your
+            portrait and wins come with you.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -729,6 +760,9 @@ function App() {
                 <Route path="/help" element={<Help />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/plans" element={<Plans />} />
+                <Route path="/portrait" element={<PortraitStudio />} />
+                <Route path="/community" element={<Community />} />
+                <Route path="/community/:postId" element={<CommunityThread />} />
                 <Route path="/sessions" element={<Sessions />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/privacy" element={<Privacy />} />
@@ -736,14 +770,17 @@ function App() {
               </Routes>
             </Box>
             <Box sx={{
-              borderTop: '1px solid #2d3748',
-              padding: '12px 16px',
-              fontSize: '0.82rem',
-              color: '#64748b',
+              borderTop: 1,
+              borderColor: 'divider',
+              padding: '8px 16px',
+              fontSize: '0.75rem',
+              color: 'text.secondary',
               lineHeight: 1.4,
+              bgcolor: 'background.default',
             }}>
-              <strong>Disclaimer:</strong> The information and calculations provided on this website are for educational purposes only and are not intended as financial, investment, tax, or legal advice. Individual circumstances vary, and you should consult with a qualified financial advisor, tax professional, or attorney before making any decisions based on the information provided.
-              {' '}<a href="/privacy">Privacy Policy</a>
+              <strong>Heads up:</strong> LeisurePlan is for education, not financial, investment, tax or legal advice.
+              Everyone's situation is different — for big decisions, talk to a qualified professional.
+              {' '}<a href="/privacy">Privacy</a> · <a href="/Legal/TermsOfUse.html" target="_blank" rel="noopener noreferrer">Terms</a>
             </Box>
             <CookieNotice />
           </Box>
