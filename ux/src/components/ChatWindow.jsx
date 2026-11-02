@@ -18,7 +18,6 @@ const STARTERS = [
   "I have credit card debt — where do I start?",
   'Should I contribute to my 401(k) match?',
   'Is sports betting or crypto a bad idea for me?',
-  'I feel behind compared to my friends',
   "I'm 26, earn $62k, rent is $1,600 — will my savings grow?",
 ];
 
